@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "graph-service"
+version = "0.0.0"
+description = "Dependency Graph Service (architectural skeleton)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.110",
+  "pydantic>=2.0",
+  "pydantic-settings>=2.0",
+  "pymongo>=4.0",
+  "ldap3>=2.9",
+]
+
+[project.optional-dependencies]
+dev = [
+  "uvicorn>=0.23",
+  "pytest>=7.0",
+  "httpx>=0.24",
+  "pip-tools>=7.0",
+  "datamodel-code-generator>=0.25",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.setuptools]
+packages = ["src"]
