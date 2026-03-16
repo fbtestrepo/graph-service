@@ -27,8 +27,8 @@ jobs:
       - name: Generate inbound models
         run: ./generate_inbound_models.sh
 
-      #- name: Check schema/model drift
-      #  run: git diff --exit-code src/adapters/inbound/api/schemas
+      - name: Check schema/model drift
+        run: git diff --exit-code src/adapters/inbound/api/schemas
 
       - name: Core purity
         run: python check_core_purity.py
