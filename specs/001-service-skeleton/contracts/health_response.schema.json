@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HealthResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "service", "version", "time"],
+  "properties": {
+    "status": {"type": "string"},
+    "service": {"type": "string"},
+    "version": {"type": "string"},
+    "time": {"type": "string", "format": "date-time"}
+  }
+}

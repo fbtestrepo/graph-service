@@ -1,0 +1,5 @@
+fastapi
+pydantic
+pydantic-settings
+pymongo
+ldap3
