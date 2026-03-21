@@ -46,3 +46,53 @@ def test_get_component_success_returns_component() -> None:
     payload = response.json()
     assert payload["component_id"] == "comp-1"
     assert payload["name"] == "Component"
+
+
+def test_post_components_echo_object_returns_same_json() -> None:
+    app = create_app()
+    with TestClient(app) as client:
+        request_payload = {"hello": "world", "n": 123, "ok": True, "none": None}
+        response = client.post("/components", json=request_payload)
+
+    assert response.status_code == 200
+    assert response.json() == request_payload
+
+
+def test_post_components_echo_array_returns_same_json() -> None:
+    app = create_app()
+    with TestClient(app) as client:
+        request_payload = [1, 2, 3, {"x": True}]
+        response = client.post("/components", json=request_payload)
+
+    assert response.status_code == 200
+    assert response.json() == request_payload
+
+
+def test_post_components_malformed_json_returns_400_problem_details() -> None:
+    app = create_app()
+    with TestClient(app) as client:
+        response = client.post(
+            "/components",
+            data="{",
+            headers={"content-type": "application/json"},
+        )
+
+    assert response.status_code == 400
+    assert response.headers["content-type"].startswith("application/problem+json")
+
+    payload = response.json()
+    assert payload["status"] == 400
+    assert payload["title"] == "Malformed JSON"
+
+
+def test_post_components_missing_body_returns_422_problem_details() -> None:
+    app = create_app()
+    with TestClient(app) as client:
+        response = client.post("/components")
+
+    assert response.status_code == 422
+    assert response.headers["content-type"].startswith("application/problem+json")
+
+    payload = response.json()
+    assert payload["status"] == 422
+    assert payload["title"] == "Validation Error"

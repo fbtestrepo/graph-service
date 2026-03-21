@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JsonValue",
+  "description": "Any JSON value (object/array/string/number/boolean/null).",
+  "$comment": "Empty schema means any instance is valid. This keeps the contract minimal and supports arbitrary JSON values.",
+  "examples": [
+    {"hello": "world"},
+    [1, 2, 3],
+    "text",
+    123,
+    true,
+    null
+  ]
+}
