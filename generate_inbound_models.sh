@@ -18,16 +18,26 @@ fi
   --input "$CONTRACTS_DIR/component.schema.json" \
   --input-file-type jsonschema \
   --output "$OUT_DIR/component.py" \
+  --disable-timestamp \
   --output-model-type pydantic_v2.BaseModel
 
 "$PYTHON_BIN" -m datamodel_code_generator \
   --input "$CONTRACTS_DIR/problem_details.schema.json" \
   --input-file-type jsonschema \
   --output "$OUT_DIR/problem_details.py" \
+  --disable-timestamp \
   --output-model-type pydantic_v2.BaseModel
 
 "$PYTHON_BIN" -m datamodel_code_generator \
   --input "$CONTRACTS_DIR/health_response.schema.json" \
   --input-file-type jsonschema \
   --output "$OUT_DIR/health_response.py" \
+  --disable-timestamp \
+  --output-model-type pydantic_v2.BaseModel
+
+"$PYTHON_BIN" -m datamodel_code_generator \
+  --input "$CONTRACTS_DIR/json_value.schema.json" \
+  --input-file-type jsonschema \
+  --output "$OUT_DIR/json_value.py" \
+  --disable-timestamp \
   --output-model-type pydantic_v2.BaseModel

@@ -64,6 +64,18 @@ Purpose: Verify specs-first request validation at the boundary.
   - `400 application/problem+json` for malformed/unparseable JSON
   - `422 application/problem+json` for schema/constraint validation failures
 
+### POST /components
+
+Purpose: Accept and echo any valid JSON payload to validate connectivity, request formatting, and server behavior.
+
+- Request: `application/json` body conforming to `json_value.schema.json` (any valid JSON value: object/array/string/number/boolean/null)
+- Success response: `200 application/json` whose JSON body equals the submitted JSON value
+- Error responses:
+  - `400 application/problem+json` for malformed/unparseable JSON
+  - `422 application/problem+json` for validation failures (e.g., missing body)
+
+Operational note: The service logs the received payload once per request; the log representation is truncated to the first 4096 characters with truncation indicated. This truncation applies to logging only; the HTTP response body is not truncated.
+
 ### GET /components/{component_id}
 
 Purpose: Demonstrate a minimal core use case invocation and domain exception mapping.

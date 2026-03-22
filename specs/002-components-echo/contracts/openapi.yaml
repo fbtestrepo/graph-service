@@ -1,3 +1,6 @@
+# NOTE: Feature-local working copy. Authoritative contracts for CI/codegen live in:
+# specs/001-service-skeleton/contracts/
+# Sync this file to match the authoritative set before merge to avoid drift.
 openapi: 3.1.0
 info:
   title: Dependency Graph Service API
@@ -99,4 +102,3 @@ paths:
             application/problem+json:
               schema:
                 $ref: ./problem_details.schema.json
-
