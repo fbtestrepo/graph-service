@@ -11,3 +11,7 @@ def get_graph_repository(request: Request) -> Any:
 
 def get_identity_provider(request: Request) -> Any:
     return request.app.state.identity_provider
+
+
+def get_component_payload_repository(request: Request) -> Any:
+    return request.app.state.component_payload_repository

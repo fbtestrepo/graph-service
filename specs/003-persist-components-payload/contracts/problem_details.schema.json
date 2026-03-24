@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ProblemDetails",
+  "type": "object",
+  "required": ["type", "title", "status", "detail"],
+  "properties": {
+    "type": {"type": "string"},
+    "title": {"type": "string"},
+    "status": {"type": "integer"},
+    "detail": {"type": "string"},
+    "error_code": {"type": "string"},
+    "errors": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {"type": "string"}
+      }
+    }
+  },
+  "additionalProperties": true
+}

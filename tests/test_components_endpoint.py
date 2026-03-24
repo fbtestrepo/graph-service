@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 
 from fastapi.testclient import TestClient
 
 from src.core.domain.component import Component as DomainComponent
+from src.core.domain.component_payload_record import ComponentPayloadRecord
 from src.infrastructure.main import create_app
 
 
@@ -18,6 +20,14 @@ class FakeGraphRepository:
         if self.component.component_id != component_id:
             return None
         return self.component
+
+
+@dataclass(slots=True)
+class FakeComponentPayloadRepository:
+    records: list[ComponentPayloadRecord] = field(default_factory=list)
+
+    def add(self, record: ComponentPayloadRecord) -> None:
+        self.records.append(record)
 
 
 def test_get_component_not_found_returns_404_problem_details() -> None:
@@ -51,21 +61,33 @@ def test_get_component_success_returns_component() -> None:
 def test_post_components_echo_object_returns_same_json() -> None:
     app = create_app()
     with TestClient(app) as client:
+        repo = FakeComponentPayloadRepository()
+        client.app.state.component_payload_repository = repo
         request_payload = {"hello": "world", "n": 123, "ok": True, "none": None}
         response = client.post("/components", json=request_payload)
 
     assert response.status_code == 200
     assert response.json() == request_payload
 
+    assert len(repo.records) == 1
+    assert repo.records[0].payload == request_payload
+    assert isinstance(repo.records[0].received_at, datetime)
+
 
 def test_post_components_echo_array_returns_same_json() -> None:
     app = create_app()
     with TestClient(app) as client:
+        repo = FakeComponentPayloadRepository()
+        client.app.state.component_payload_repository = repo
         request_payload = [1, 2, 3, {"x": True}]
         response = client.post("/components", json=request_payload)
 
     assert response.status_code == 200
     assert response.json() == request_payload
+
+    assert len(repo.records) == 1
+    assert repo.records[0].payload == request_payload
+    assert isinstance(repo.records[0].received_at, datetime)
 
 
 def test_post_components_malformed_json_returns_400_problem_details() -> None:

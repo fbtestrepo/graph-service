@@ -6,12 +6,15 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 
+from src.adapters.inbound.api.dependencies.wiring import get_component_payload_repository
 from src.adapters.inbound.api.dependencies.wiring import get_graph_repository
 from src.adapters.inbound.api.schemas.component import Component as ComponentSchema
 from src.adapters.inbound.api.schemas.json_value import JsonValue
 from src.core.domain.component import Component as DomainComponent
+from src.core.ports.component_payload_repository import ComponentPayloadRepository
 from src.core.ports.graph_repository import GraphRepository
 from src.core.use_cases.get_component import GetComponent
+from src.core.use_cases.record_component_payload import RecordComponentPayload
 
 
 router = APIRouter(prefix="/components", tags=["components"])
@@ -29,7 +32,10 @@ def _to_component_schema(component: DomainComponent) -> ComponentSchema:
 
 
 @router.post("", response_model=JsonValue)
-def echo_components(payload: JsonValue) -> Any:
+def echo_components(
+    payload: JsonValue,
+    component_payload_repository: ComponentPayloadRepository = Depends(get_component_payload_repository),
+) -> Any:
     serialized_payload = json.dumps(payload.root, ensure_ascii=False)
     is_truncated = len(serialized_payload) > 4096
     logged_payload = serialized_payload[:4096] if is_truncated else serialized_payload
@@ -39,6 +45,9 @@ def echo_components(payload: JsonValue) -> Any:
         is_truncated,
         logged_payload,
     )
+
+    use_case = RecordComponentPayload(component_payload_repository)
+    use_case.execute(payload.root)
 
     return payload.root
 

@@ -8,6 +8,7 @@ from src.adapters.inbound.api.routers.health import router as health_router
 from src.adapters.outbound.ldap.client import create_ldap_connection
 from src.adapters.outbound.ldap.identity_provider import LdapIdentityProvider
 from src.adapters.outbound.mongodb.client import create_mongo_client
+from src.adapters.outbound.mongodb.component_payload_repository import MongoComponentPayloadRepository
 from src.adapters.outbound.mongodb.graph_repository import MongoGraphRepository
 from src.infrastructure.config.settings import load_settings
 from src.infrastructure.errors.handlers import register_exception_handlers
@@ -33,6 +34,7 @@ def create_app() -> FastAPI:
         app.state.mongo_client = mongo_client
         app.state.mongo_db = mongo_client[settings.mongodb_database]
         app.state.graph_repository = MongoGraphRepository(app.state.mongo_db)
+        app.state.component_payload_repository = MongoComponentPayloadRepository(app.state.mongo_db)
 
         ldap_conn = create_ldap_connection(
             server_uri=settings.ldap_server_uri,
