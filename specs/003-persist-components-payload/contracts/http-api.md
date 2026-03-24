@@ -1,10 +1,11 @@
-# HTTP API Contract (Scaffold)
+# HTTP API Contract (Working Copy)
 
-**Branch**: 001-service-skeleton  
-**Date**: 2026-03-14
+**Branch**: 003-persist-components-payload  
+**Date**: 2026-03-21
 
-This contract document describes the minimal HTTP interface required for the architectural skeleton.
-It is intentionally small and exists to validate repository structure, routing, and error handling.
+This contract document describes the HTTP interface relevant to this feature.
+
+NOTE: This is a working copy for this feature. The authoritative contracts used for codegen/CI live under `specs/001-service-skeleton/contracts/`.
 
 ## Media Types
 
@@ -27,11 +28,7 @@ Optional fields:
 
 ## Standard HTTP Status Mapping
 
-- 400: Malformed business request
-- 401: LDAP authentication failed
-- 403: LDAP authorization failed
-- 404: Node/dependency not found
-- 409: State conflict (duplicate edge)
+- 400: Malformed/unparseable JSON request
 - 422: Validation error (schema/constraints)
 - 500: Unhandled infrastructure failure (no stack trace leaked)
 
@@ -42,17 +39,6 @@ Optional fields:
 Purpose: Verify service wiring and routing works.
 
 - Response: 200 `application/json`
-
-Example response:
-
-```json
-{
-  "status": "ok",
-  "service": "dependency-graph-service",
-  "version": "dev",
-  "time": "2026-03-14T12:34:56Z"
-}
-```
 
 ### POST /components/validate
 
@@ -66,15 +52,17 @@ Purpose: Verify specs-first request validation at the boundary.
 
 ### POST /components
 
-Purpose: Accept, persist, and echo any valid JSON payload to validate connectivity, request formatting, and server behavior.
+Purpose: Accept and echo any valid JSON payload and persist it to MongoDB.
 
 - Request: `application/json` body conforming to `json_value.schema.json` (any valid JSON value: object/array/string/number/boolean/null)
 - Success response: `200 application/json` whose JSON body equals the submitted JSON value
-- Side effect (on success): The service persists the submitted JSON payload to MongoDB before returning `200 OK`.
+- Side effect (on success): the service persists a new record containing:
+  - `received_at` (UTC timestamp)
+  - `payload` (the submitted JSON value)
 - Error responses:
   - `400 application/problem+json` for malformed/unparseable JSON
   - `422 application/problem+json` for validation failures (e.g., missing body)
-  - `500 application/problem+json` when persistence fails for any reason (no `200` is returned)
+  - `500 application/problem+json` if persistence fails for any reason (and MUST NOT return `200`)
 
 Operational note: The service logs the received payload once per request; the log representation is truncated to the first 4096 characters with truncation indicated. This truncation applies to logging only; the HTTP response body is not truncated.
 
@@ -86,4 +74,3 @@ Purpose: Demonstrate a minimal core use case invocation and domain exception map
 - Error responses:
   - `404 application/problem+json` when the component does not exist
   - `500 application/problem+json` for unhandled errors (no stack trace leaked)
-

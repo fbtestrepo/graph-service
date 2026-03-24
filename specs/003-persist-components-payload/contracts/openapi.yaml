@@ -4,6 +4,9 @@ info:
   version: 0.0.0
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 
+# NOTE: Working copy for this feature.
+# Authoritative contracts for codegen/CI live under: specs/001-service-skeleton/contracts/
+
 paths:
   /health:
     get:
@@ -43,8 +46,7 @@ paths:
 
   /components:
     post:
-      summary: Persist and echo any JSON payload
-      description: Persists the submitted JSON payload to MongoDB before returning a 200 response.
+      summary: Echo any JSON payload (and persist it)
       requestBody:
         required: true
         content:
@@ -71,7 +73,7 @@ paths:
               schema:
                 $ref: ./problem_details.schema.json
         "500":
-          description: Internal server error (e.g., persistence failure)
+          description: Persistence failure or other internal error
           content:
             application/problem+json:
               schema:
@@ -106,4 +108,3 @@ paths:
             application/problem+json:
               schema:
                 $ref: ./problem_details.schema.json
-
