@@ -15,3 +15,7 @@ def get_identity_provider(request: Request) -> Any:
 
 def get_component_payload_repository(request: Request) -> Any:
     return request.app.state.component_payload_repository
+
+
+def get_component_node_repository(request: Request) -> Any:
+    return request.app.state.component_node_repository

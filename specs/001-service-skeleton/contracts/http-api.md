@@ -66,23 +66,24 @@ Purpose: Verify specs-first request validation at the boundary.
 
 ### POST /components
 
-Purpose: Accept, persist, and echo any valid JSON payload to validate connectivity, request formatting, and server behavior.
+Purpose: Validate and upsert a component node payload keyed by `node-id`.
 
-- Request: `application/json` body conforming to `json_value.schema.json` (any valid JSON value: object/array/string/number/boolean/null)
-- Success response: `200 application/json` whose JSON body equals the submitted JSON value
-- Side effect (on success): The service persists the submitted JSON payload to MongoDB before returning `200 OK`.
+- Request: `application/json` body conforming to `component_node.schema.json`
+- Success responses:
+  - `201 Created` when the service created a new document for `node-id`
+  - `200 OK` when the service replaced an existing document for `node-id`
+- Response body: the accepted component node payload
+- Side effect (on success): The service persists the payload to MongoDB, replacing any existing document that matches the same `node-id`.
 - Error responses:
   - `400 application/problem+json` for malformed/unparseable JSON
-  - `422 application/problem+json` for validation failures (e.g., missing body)
+  - `422 application/problem+json` for schema/constraint validation failures
   - `500 application/problem+json` when persistence fails for any reason (no `200` is returned)
-
-Operational note: The service logs the received payload once per request; the log representation is truncated to the first 4096 characters with truncation indicated. This truncation applies to logging only; the HTTP response body is not truncated.
 
 ### GET /components/{component_id}
 
-Purpose: Demonstrate a minimal core use case invocation and domain exception mapping.
+Purpose: Retrieve a component node by `node-id` (path parameter `{component_id}` is treated as `node-id`).
 
-- Response: `200 application/json` body conforming to `component.schema.json`
+- Response: `200 application/json` body conforming to `component_node.schema.json`
 - Error responses:
   - `404 application/problem+json` when the component does not exist
   - `500 application/problem+json` for unhandled errors (no stack trace leaked)

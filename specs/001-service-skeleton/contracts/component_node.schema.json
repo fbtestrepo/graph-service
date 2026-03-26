@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ComponentNode",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["node-id", "node-type", "node-name", "metadata"],
+  "properties": {
+    "node-id": {"type": "string", "minLength": 1},
+    "node-type": {"type": "string", "minLength": 1},
+    "node-name": {"type": "string", "minLength": 1},
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["parent-asset-id"],
+      "properties": {
+        "parent-asset-id": {"type": "string", "minLength": 1}
+      }
+    },
+    "interfaces": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/ComponentInterface"}
+    },
+    "relationships": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/ComponentRelationship"}
+    }
+  },
+  "$defs": {
+    "ComponentInterface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["interface-local-id", "interface-type"],
+      "properties": {
+        "interface-local-id": {"type": "string", "minLength": 1},
+        "interface-type": {"type": "string", "minLength": 1}
+      }
+    },
+    "EndpointRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node-id", "interface-local-id"],
+      "properties": {
+        "node-id": {"type": "string", "minLength": 1},
+        "interface-local-id": {"type": "string", "minLength": 1}
+      }
+    },
+    "ComponentRelationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relationship-type", "source", "target"],
+      "properties": {
+        "relationship-type": {"type": "string", "minLength": 1},
+        "source": {"$ref": "#/$defs/EndpointRef"},
+        "target": {"$ref": "#/$defs/EndpointRef"}
+      }
+    }
+  }
+}
