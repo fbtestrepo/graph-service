@@ -1,0 +1,31 @@
+{
+  "node-id": "mAG_A",
+  "node-type": "micro-affinity-group",
+  "node-name": "Micro Affinity Group A",
+  "metadata": {
+    "parent-asset-id": "ba0270"
+  },
+  "interfaces": [
+    {
+      "interface-local-id": "workload_1",
+      "interface-type": "workload"
+    },
+    {
+      "interface-local-id": "workload_2",
+      "interface-type": "workload"
+    }
+  ],
+  "relationships": [
+    {
+      "relationship-type": "depends-on",
+      "source": {
+        "node-id": "mAG_A",
+        "interface-local-id": "workload_1"
+      },
+      "target": {
+        "node-id": "mAG_B",
+        "interface-local-id": "workload_1"
+      }
+    }
+  ]
+}

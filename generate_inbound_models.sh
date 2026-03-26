@@ -36,6 +36,13 @@ fi
   --output-model-type pydantic_v2.BaseModel
 
 "$PYTHON_BIN" -m datamodel_code_generator \
+  --input "$CONTRACTS_DIR/component_node.schema.json" \
+  --input-file-type jsonschema \
+  --output "$OUT_DIR/component_node.py" \
+  --disable-timestamp \
+  --output-model-type pydantic_v2.BaseModel
+
+"$PYTHON_BIN" -m datamodel_code_generator \
   --input "$CONTRACTS_DIR/json_value.schema.json" \
   --input-file-type jsonschema \
   --output "$OUT_DIR/json_value.py" \
