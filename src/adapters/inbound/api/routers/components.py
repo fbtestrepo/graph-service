@@ -4,7 +4,9 @@ from fastapi import APIRouter, Depends, Response, status
 
 from src.adapters.inbound.api.dependencies.wiring import get_component_node_repository
 from src.adapters.inbound.api.schemas.component_node import ComponentNode
+from src.adapters.inbound.api.schemas.component_dependencies_response import ComponentDependenciesResponse
 from src.core.ports.component_node_repository import ComponentNodeRepository
+from src.core.use_cases.get_component_dependencies import GetComponentDependencies
 from src.core.use_cases.get_component_node import GetComponentNode
 from src.core.use_cases.upsert_component_node import UpsertComponentNode
 
@@ -32,3 +34,29 @@ def get_component_node(
     use_case = GetComponentNode(component_node_repository)
     payload = use_case.execute(component_id)
     return ComponentNode.model_validate(payload)
+
+
+@router.get(
+    "/{node_id}/dependencies",
+    response_model=ComponentDependenciesResponse,
+)
+def get_component_dependencies(
+    node_id: str,
+    component_node_repository: ComponentNodeRepository = Depends(get_component_node_repository),
+) -> ComponentDependenciesResponse:
+    use_case = GetComponentDependencies(component_node_repository)
+    edges = use_case.execute(node_id)
+
+    return ComponentDependenciesResponse.model_validate(
+        {
+            "node-id": node_id,
+            "dependency-graph": [
+                {
+                    "relationship-type": e.relationship_type,
+                    "source-node-id": e.source_node_id,
+                    "target-node-id": e.target_node_id,
+                }
+                for e in edges
+            ],
+        }
+    )

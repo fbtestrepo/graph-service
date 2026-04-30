@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dependency_edge.schema.json",
+  "title": "DependencyEdge",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "relationship-type",
+    "source-node-id",
+    "target-node-id"
+  ],
+  "properties": {
+    "relationship-type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source-node-id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target-node-id": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

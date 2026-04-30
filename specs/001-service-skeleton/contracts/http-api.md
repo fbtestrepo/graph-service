@@ -88,3 +88,24 @@ Purpose: Retrieve a component node by `node-id` (path parameter `{component_id}`
   - `404 application/problem+json` when the component does not exist
   - `500 application/problem+json` for unhandled errors (no stack trace leaked)
 
+### GET /components/{node_id}/dependencies
+
+Purpose: Retrieve the full transitive dependency graph (upstream + downstream) for a root component node.
+
+Semantics:
+
+- The response includes **both** downstream and upstream reachability.
+  - Downstream traversal follows edges `source-node-id → target-node-id`.
+  - Upstream traversal follows edges in reverse direction (`target-node-id → source-node-id`).
+- Traversal expands **one hop at a time** (level-order) and is capped at **20 hops** from the root.
+- Boundary rule at depth 20: the service may fetch/include edges incident to depth-20 nodes only when both endpoints are already within ≤ 20 hops from the root; it must not include edges that would introduce hop-21 nodes, and must not expand beyond depth 20.
+- Edge extraction rule: edges are derived from stored component-node relationship records, and only “self-sourced” relationships are included (i.e., only include relationships where `relationship.source.node-id == document.node-id`).
+- Cycles: the service must avoid infinite loops and may include cycle-closing edges.
+- The returned edge list is **deduplicated** and **deterministically ordered** by: `relationship-type`, then `source-node-id`, then `target-node-id` (ascending lexical order).
+- Missing-node edges (FR-011 intent): if an edge references a node-id that does not exist as a stored component node, the edge is still included; indirect expansion beyond missing nodes is not required.
+
+- Response: `200 application/json` body conforming to `component_dependencies_response.schema.json`
+- Error responses:
+  - `404 application/problem+json` when the root node does not exist
+  - `500 application/problem+json` for unhandled errors (no stack trace leaked)
+

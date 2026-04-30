@@ -1,6 +1,6 @@
 # Dependency Graph Service API Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-03-24
+Auto-generated from all feature plans. Last updated: 2026-03-26
 
 ## Active Technologies
 - Python 3.12 + FastAPI, Pydantic, Motor (MongoDB Atlas), LDAP3 (001-service-skeleton)
@@ -30,9 +30,9 @@ tests/
 Python 3.12 (project baseline for scaffolding): Follow standard conventions
 
 ## Recent Changes
+- 005-component-dependencies: Added Python 3.12+ + FastAPI, Pydantic v2, PyMongo
 - 004-components-payload-schema: Added Python 3.12+ + FastAPI, Pydantic v2, PyMongo
 - 003-persist-components-payload: Added Python 3.12 + FastAPI, Pydantic v2, PyMongo
-- 002-components-echo: Added Python 3.12+ (project requires `>=3.12`) + FastAPI, Pydantic v2, Starlette
 
 
 <!-- MANUAL ADDITIONS START -->

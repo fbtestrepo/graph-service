@@ -1,0 +1,20 @@
+{
+  "node-id": "mAG_A",
+  "dependency-graph": [
+    {
+      "relationship-type": "depends-on",
+      "source-node-id": "mAG_A",
+      "target-node-id": "mAG_B"
+    },
+    {
+      "relationship-type": "depends-on",
+      "source-node-id": "mAG_B",
+      "target-node-id": "mAG_C"
+    },
+    {
+      "relationship-type": "depends-on",
+      "source-node-id": "mAG_C",
+      "target-node-id": "mAG_D"
+    }
+  ]
+}
