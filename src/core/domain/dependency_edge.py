@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
 class DependencyEdge:
-    from_component_id: str
-    to_component_id: str
-    edge_type: str | None = None
-    metadata: dict[str, Any] = field(default_factory=dict)
+    relationship_type: str
+    source_node_id: str
+    target_node_id: str
+
+    def sort_key(self) -> tuple[str, str, str]:
+        return (self.relationship_type, self.source_node_id, self.target_node_id)

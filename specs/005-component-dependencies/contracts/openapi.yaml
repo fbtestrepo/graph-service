@@ -4,6 +4,9 @@ info:
   version: 0.0.0
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 
+# NOTE: Working copy for this feature.
+# Authoritative contracts for codegen/CI live under: specs/001-service-skeleton/contracts/
+
 paths:
   /health:
     get:
@@ -65,7 +68,7 @@ paths:
               schema:
                 $ref: ./component_node.schema.json
         "400":
-          description: Malformed/unparseable request
+          description: Malformed/unparseable JSON
           content:
             application/problem+json:
               schema:
@@ -86,6 +89,7 @@ paths:
   /components/{component_id}:
     get:
       summary: Get a component node by node-id
+
       parameters:
         - name: component_id
           in: path
@@ -115,8 +119,9 @@ paths:
 
   /components/{node_id}/dependencies:
     get:
-      summary: Get full transitive dependencies for a component node
+      summary: Get full transitive dependencies for a node
       description: Returns the transitive dependency graph (upstream + downstream) as a stable edge list.
+
       parameters:
         - name: node_id
           in: path
@@ -143,4 +148,3 @@ paths:
             application/problem+json:
               schema:
                 $ref: ./problem_details.schema.json
-

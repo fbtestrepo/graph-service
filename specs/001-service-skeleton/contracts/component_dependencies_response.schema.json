@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "component_dependencies_response.schema.json",
+  "title": "ComponentDependenciesResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "node-id",
+    "dependency-graph"
+  ],
+  "properties": {
+    "node-id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dependency-graph": {
+      "type": "array",
+      "items": {
+        "$ref": "dependency_edge.schema.json"
+      }
+    }
+  }
+}
