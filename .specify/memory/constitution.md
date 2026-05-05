@@ -1,28 +1,28 @@
 <!--
 Sync Impact Report
 
-- Version change: unversioned template -> 1.0.0
+- Version change: 1.0.0 -> 1.1.0
 - Modified principles:
 
-  - (template placeholders) -> I. Hexagonal Architecture (Ports & Adapters)
-  - (template placeholders) -> II. Specification-Driven API Contracts & Validation
-  - (template placeholders) -> III. Domain Errors & HTTP Classification
-  - (template placeholders) -> IV. External Integrations Are Adapters
-  - (template placeholders) -> V. Immutable Project Structure
+  - II. Specification-Driven API Contracts & Validation
+  - V. Immutable Project Structure
 - Added sections:
 
-  - Authoritative Structure Blueprint
-  - Workflow & Quality Gates
+  - None
 - Removed sections:
 
-  - None (template placeholders replaced)
+  - None
 - Templates requiring updates:
 
   - ✅ updated: .specify/templates/plan-template.md
   - ✅ updated: .specify/templates/spec-template.md
   - ✅ updated: .specify/templates/tasks-template.md
   - ✅ updated: .specify/templates/checklist-template.md
-  - ✅ updated: .specify/templates/agent-file-template.md (project name hint)
+  - ✅ verified: no additional template updates required
+- Runtime guidance docs updated:
+
+  - ✅ updated: README.md
+  - ✅ updated: src/adapters/inbound/api/schemas/README.md
 - Deferred TODOs:
 
   - None
@@ -49,18 +49,24 @@ core logic.
 
 ### II. Specification-Driven API Contracts & Validation
 This service uses Specification-Driven Development (SDD). The `specs/` directory is the single
-source of truth for API contracts (OpenAPI YAML and central JSON Schemas).
+source of truth for feature intent, behavioral requirements, and software specifications. The
+root-level `schemas/` directory is the single source of truth for canonical data contracts
+(e.g., CALM JSON Schemas).
 
 Non-negotiables:
-- Any API contract change MUST start by updating `specs/` first.
+- Any change to feature intent, behavioral requirements, or software specifications MUST start by
+  updating `specs/` first.
+- Any change to canonical or shared data contracts MUST start by updating `schemas/` first.
 - All JSON payload validation is the exclusive responsibility of the inbound adapter layer.
-- Pydantic models in `src/adapters/inbound/api/schemas/` MUST strictly mirror the schemas and
-  OpenAPI definitions under `specs/`.
+- Pydantic models in `src/adapters/inbound/api/schemas/` MUST strictly mirror the applicable
+  authoritative contracts defined under `specs/` and/or `schemas/`, and their source path MUST be
+  documented.
 - Invalid payloads MUST be rejected before reaching core use cases, using:
   - `422 Unprocessable Entity` for schema/validation errors
   - `400 Bad Request` for malformed requests that cannot be interpreted
 
-Rationale: Prevents contract drift and keeps the core free of transport concerns.
+Rationale: Prevents contract drift by separating feature specification ownership from canonical
+data contract ownership while keeping the core free of transport concerns.
 
 ### III. Domain Errors & HTTP Classification
 Business logic failures MUST be represented as domain exceptions and MUST NOT leak HTTP concerns
@@ -126,7 +132,8 @@ Directory map and purposes:
 
 ```text
 graph_service/
-+-- specs/                  # Specification-First artifacts (OpenAPI YAML, central JSON Schemas).
++-- specs/                  # Source of truth for feature intent, behavioral requirements, and software specifications.
++-- schemas/                # Source of truth for canonical data contracts (e.g., CALM JSON Schemas).
 +-- src/
 ¦   +-- core/               # The heart of the application. Strictly framework-agnostic.
 ¦   ¦   +-- domain/         # Pure Python entities representing nodes, edges, dependencies.
@@ -139,7 +146,7 @@ graph_service/
 ¦   ¦   ¦   +-- api/        # FastAPI application layer.
 ¦   ¦   ¦       +-- dependencies/ # FastAPI dependency injection helpers.
 ¦   ¦   ¦       +-- routers/      # HTTP endpoints mapping routes to use cases.
-¦   ¦   ¦       +-- schemas/      # Pydantic models mirroring `specs/`.
+¦   ¦   ¦       +-- schemas/      # Pydantic models mirroring authoritative contracts.
 ¦   ¦   +-- outbound/
 ¦   ¦       +-- mongodb/    # MongoDB Atlas clients + repository implementations.
 ¦   ¦       +-- ldap/       # LDAP auth + user lookup implementations.
@@ -158,7 +165,10 @@ graph_service/
 
 Delivery expectations for all changes:
 
-- Specs-first: any API change MUST update `specs/` before code is implemented.
+- Specs-first: any change to feature intent, behavioral requirements, or software specifications
+  MUST update `specs/` before code is implemented.
+- Canonical-contracts-first: any change to canonical data contracts MUST update `schemas/`
+  before generated models or adapter code are changed.
 - Architecture boundaries: new business rules MUST go to `src/core/domain/` and/or
 
   `src/core/use_cases/`; adapters MUST remain thin.
@@ -196,9 +206,11 @@ Compliance expectations:
 - Every feature plan and PR review MUST include a “Constitution Check” confirming:
 
   - Hexagonal boundaries remain intact
-  - `specs/` is the source of truth and is updated when contracts change
+  - `specs/` is updated when feature intent, behavioral requirements, or software specifications
+    change
+  - `schemas/` is updated when canonical data contracts change
   - Inbound validation rejects invalid payloads before the core
   - Domain exceptions are mapped to correct HTTP responses
   - Folder structure remains unchanged unless explicitly approved
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-03-14
+**Version**: 1.1.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-05-02

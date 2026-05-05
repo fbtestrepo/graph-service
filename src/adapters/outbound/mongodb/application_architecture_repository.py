@@ -1,0 +1,27 @@
+from __future__ import annotations
+
+from pymongo.database import Database
+
+from src.core.ports.application_architecture_repository import (
+    ApplicationArchitecturePayload,
+    ApplicationArchitectureRepository,
+)
+
+
+class MongoApplicationArchitectureRepository(ApplicationArchitectureRepository):
+    def __init__(self, db: Database):
+        self._db = db
+
+    def upsert(self, asset_id: str, version: str, payload: ApplicationArchitecturePayload) -> bool:
+        collection = self._db.get_collection("application-architectures")
+        document_filter = {"metadata.AssetID": asset_id, "metadata.version": version}
+
+        existing = collection.find_one(document_filter, projection={"_id": False}) or {}
+        unset_fields = {field_name: "" for field_name in existing.keys() - payload.keys()}
+
+        update_document: dict[str, object] = {"$set": payload}
+        if unset_fields:
+            update_document["$unset"] = unset_fields
+
+        result = collection.update_one(document_filter, update_document, upsert=True)
+        return result.upserted_id is not None

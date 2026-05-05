@@ -79,6 +79,25 @@ Purpose: Validate and upsert a component node payload keyed by `node-id`.
   - `422 application/problem+json` for schema/constraint validation failures
   - `500 application/problem+json` when persistence fails for any reason (no `200` is returned)
 
+### POST /application-architectures
+
+Purpose: Validate and upsert a CALM application architecture document keyed by
+`metadata.AssetID` + `metadata.version`.
+
+- Request: `application/json` body conforming to `application_architecture.schema.json`
+- Success responses:
+  - `201 Created` when the service creates a new record for the supplied `AssetID` and `version`
+  - `200 OK` when the service overwrites an existing record for the supplied `AssetID` and
+    `version`
+- Response body: the stored application architecture document
+- Side effect (on success): The service persists the payload to MongoDB collection
+  `application-architectures`, overwriting any existing document that matches the same
+  `AssetID + version` pair.
+- Error responses:
+  - `400 application/problem+json` for malformed/unparseable JSON
+  - `422 application/problem+json` for CALM schema or metadata validation failures
+  - `500 application/problem+json` when persistence fails for any reason
+
 ### GET /components/{component_id}
 
 Purpose: Retrieve a component node by `node-id` (path parameter `{component_id}` is treated as `node-id`).

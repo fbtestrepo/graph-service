@@ -23,14 +23,15 @@
 ## [Category 1]
 
 - [ ] CHK001 Constitution check: core remains framework-agnostic (no adapter imports)
-- [ ] CHK002 Constitution check: any API change updated in `specs/` first
-- [ ] CHK003 Constitution check: inbound validation rejects invalid payloads before core
+- [ ] CHK002 Constitution check: feature intent, behavioral requirements, and software specs were updated in `specs/` first when changed
+- [ ] CHK003 Constitution check: canonical data contract changes were updated in `schemas/` first when changed
+- [ ] CHK004 Constitution check: inbound validation rejects invalid payloads before core
 
 ## [Category 2]
 
-- [ ] CHK004 Constitution check: domain exceptions in `src/core/exceptions/`
-- [ ] CHK005 Constitution check: exception handlers map to correct HTTP codes; no stack traces leaked
-- [ ] CHK006 Constitution check: folder structure unchanged unless explicitly approved
+- [ ] CHK005 Constitution check: domain exceptions in `src/core/exceptions/`
+- [ ] CHK006 Constitution check: exception handlers map to correct HTTP codes; no stack traces leaked
+- [ ] CHK007 Constitution check: folder structure unchanged unless explicitly approved
 
 ## Notes
 

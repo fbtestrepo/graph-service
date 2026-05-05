@@ -1,0 +1,54 @@
+openapi: 3.1.0
+info:
+  title: Dependency Graph Service API - CALM Architecture Ingestion
+  version: 0.1.0
+  description: Working-copy contract for the CALM application architecture ingestion feature.
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+
+# NOTE: Working copy for this feature.
+# Authoritative contracts for codegen/CI live under: specs/001-service-skeleton/contracts/
+
+paths:
+  /application-architectures:
+    post:
+      tags:
+        - application-architectures
+      summary: Validate and upsert an application architecture document
+      operationId: postApplicationArchitecture
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./application_architecture.schema.json
+      responses:
+        '201':
+          description: Created a new application architecture document for the supplied AssetID and version.
+          content:
+            application/json:
+              schema:
+                $ref: ./application_architecture.schema.json
+        '200':
+          description: Overwrote an existing application architecture document for the supplied AssetID and version.
+          content:
+            application/json:
+              schema:
+                $ref: ./application_architecture.schema.json
+        '400':
+          description: Malformed JSON request body.
+          content:
+            application/problem+json:
+              schema:
+                $ref: ../../../specs/001-service-skeleton/contracts/problem_details.schema.json
+        '422':
+          description: CALM schema or metadata validation failure.
+          content:
+            application/problem+json:
+              schema:
+                $ref: ../../../specs/001-service-skeleton/contracts/problem_details.schema.json
+        '500':
+          description: Unhandled infrastructure failure during persistence.
+          content:
+            application/problem+json:
+              schema:
+                $ref: ../../../specs/001-service-skeleton/contracts/problem_details.schema.json
