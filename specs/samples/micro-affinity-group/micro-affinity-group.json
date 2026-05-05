@@ -4,7 +4,7 @@
   "parent-asset-id": "ba0270",
   "architecture-version": "1.0.0",
   "environment": "production",
-  "effective-date": "2024-01-01T14:00:00Z",
+  "effective-date": "2025-01-01T14:00:00Z",
   "workloads": [
     {
       "workload-id": "AIMC/repos/rw-orchestrator-svc_ba0116_pq0177",
