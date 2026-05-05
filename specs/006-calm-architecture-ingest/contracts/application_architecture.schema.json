@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://graph-service.local/specs/006-calm-architecture-ingest/contracts/application_architecture.schema.json",
+  "title": "Application Architecture Document",
+  "description": "Service-level request/response contract for POST /application-architectures. Root structure is inherited from the canonical CALM entry schema and augmented with strict metadata requirements.",
+  "allOf": [
+    {
+      "$ref": "../../../schemas/calm/v1_2/calm.json"
+    },
+    {
+      "type": "object",
+      "required": [
+        "metadata"
+      ],
+      "properties": {
+        "metadata": {
+          "type": "object",
+          "required": [
+            "AssetID",
+            "version",
+            "created"
+          ],
+          "properties": {
+            "AssetID": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9]+$",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+            },
+            "created": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$",
+              "format": "date"
+            }
+          },
+          "additionalProperties": true
+        }
+      }
+    }
+  ]
+}

@@ -20,7 +20,11 @@ description: "Task list template for feature implementation"
 
 ## Path Conventions
 
-- **This service (authoritative)**: `specs/`, `src/`, `tests/` at repository root
+- **This service (authoritative)**: `specs/`, `schemas/`, `src/`, `tests/` at repository root
+- **Feature specifications**: `specs/` stores feature intent, behavioral requirements, and
+  software specifications
+- **Canonical contracts**: `schemas/` stores shared or canonical data contracts (for example,
+  CALM JSON Schemas)
 - **Hexagonal layout** (fixed folders):
   - Core: `src/core/domain/`, `src/core/ports/`, `src/core/use_cases/`, `src/core/exceptions/`
   - Inbound API: `src/adapters/inbound/api/{dependencies,routers,schemas}/`
@@ -54,7 +58,8 @@ description: "Task list template for feature implementation"
 - [ ] T001 Create project structure per implementation plan
 - [ ] T002 Initialize Python project and dependencies (FastAPI, Pydantic, MongoDB driver, LDAP client)
 - [ ] T003 [P] Configure linting and formatting tools
-- [ ] T004 [P] Create baseline `specs/` OpenAPI + JSON Schemas skeleton (source of truth)
+- [ ] T004 [P] Establish source-of-truth artifacts in `specs/` for feature behavior and in
+  `schemas/` for canonical contracts when the feature changes either surface
 
 ---
 

@@ -36,7 +36,9 @@ Required gates for this project (see `.specify/memory/constitution.md`):
 - Architecture: Feature design preserves Hexagonal Architecture (Ports & Adapters).
 - Core purity: `src/core/` remains framework-agnostic (no `fastapi`, `pymongo`/`motor`, `ldap3`, etc.).
 - Ports: Any new external capability is introduced as an ABC in `src/core/ports/`.
-- Specs-first: Any API contract change starts in `specs/` (OpenAPI + JSON Schemas).
+- Specs-first: Any change to feature intent, behavioral requirements, or software specifications
+  starts in `specs/`.
+- Canonical contracts: Any change to shared or canonical data contracts starts in `schemas/`.
 - Validation: Inbound adapter validates all JSON payloads via Pydantic schemas in
   `src/adapters/inbound/api/schemas/` before calling core use cases.
 - Errors: New domain exceptions are defined in `src/core/exceptions/` and mapped to HTTP in
@@ -69,6 +71,7 @@ specs/[###-feature]/
 # Authoritative baseline structure (DO NOT change folders without explicit approval)
 
 specs/
+schemas/
 
 src/
 ├── core/

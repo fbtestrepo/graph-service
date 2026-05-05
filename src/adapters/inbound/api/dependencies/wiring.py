@@ -19,3 +19,7 @@ def get_component_payload_repository(request: Request) -> Any:
 
 def get_component_node_repository(request: Request) -> Any:
     return request.app.state.component_node_repository
+
+
+def get_application_architecture_repository(request: Request) -> Any:
+    return request.app.state.application_architecture_repository

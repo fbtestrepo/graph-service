@@ -42,6 +42,87 @@ fi
   --disable-timestamp \
   --output-model-type pydantic_v2.BaseModel
 
+tmp_codegen_input_dir="$ROOT_DIR/tmp_codegen_application_architecture_input"
+tmp_codegen_file="$ROOT_DIR/tmp_codegen_application_architecture.py"
+rm -rf "$tmp_codegen_input_dir" "$tmp_codegen_file"
+mkdir -p "$tmp_codegen_input_dir/schemas/calm"
+
+cp "$CONTRACTS_DIR/application_architecture.schema.json" "$tmp_codegen_input_dir/application_architecture.schema.json"
+cp -R "$ROOT_DIR/schemas/calm/v1_2" "$tmp_codegen_input_dir/schemas/calm/"
+
+"$PYTHON_BIN" -c "
+from pathlib import Path
+
+contract_path = Path(r'$tmp_codegen_input_dir') / 'application_architecture.schema.json'
+contract = contract_path.read_text(encoding='utf-8')
+contract = contract.replace('../../../schemas/calm/v1_2/calm.json', './schemas/calm/v1_2/calm.json')
+contract_path.write_text(contract, encoding='utf-8')
+"
+
+"$PYTHON_BIN" -m datamodel_code_generator \
+  --input "$tmp_codegen_input_dir/application_architecture.schema.json" \
+  --input-file-type jsonschema \
+  --output "$tmp_codegen_file" \
+  --disable-timestamp \
+  --output-model-type pydantic_v2.BaseModel
+
+if [ ! -f "$tmp_codegen_file" ]; then
+  echo "Expected $tmp_codegen_file to be generated" >&2
+  exit 1
+fi
+
+cp "$tmp_codegen_file" "$OUT_DIR/application_architecture.py"
+
+"$PYTHON_BIN" -c "
+from pathlib import Path
+
+schema_path = Path(r'$OUT_DIR') / 'application_architecture.py'
+schema = schema_path.read_text(encoding='utf-8')
+schema += '''
+
+from pydantic import field_validator, model_validator
+
+
+class ApplicationArchitecture(ApplicationArchitectureDocument):
+  model_config = ConfigDict(extra='forbid')
+
+  @model_validator(mode='before')
+  @classmethod
+  def _validate_root_metadata_object(cls, data: Any) -> Any:
+    if not isinstance(data, dict):
+      return data
+
+    metadata = data.get('metadata')
+    if metadata is None:
+      raise ValueError('metadata is required')
+    if not isinstance(metadata, dict):
+      raise ValueError('metadata must be an object')
+
+    return data
+
+  @field_validator('metadata')
+  @classmethod
+  def _validate_metadata(cls, value: Metadata) -> Metadata:
+    if not value.AssetID.isalnum():
+      raise ValueError('AssetID must contain only ASCII letters and digits')
+
+    version_parts = value.version.split('.')
+    if len(version_parts) != 3 or any(not part.isdigit() for part in version_parts):
+      raise ValueError('version must use major.minor.patch semantic version format')
+
+    if not isinstance(value.created, date):
+      raise ValueError('created must be a valid calendar date')
+
+    return value
+
+
+__all__ = ['ApplicationArchitecture', 'ApplicationArchitectureDocument', 'Metadata']
+'''
+schema_path.write_text(schema, encoding='utf-8')
+"
+
+rm -rf "$tmp_codegen_input_dir" "$tmp_codegen_file"
+
 tmp_codegen_dir="$ROOT_DIR/tmp_codegen_component_dependencies_response"
 rm -rf "$tmp_codegen_dir"
 mkdir -p "$tmp_codegen_dir"

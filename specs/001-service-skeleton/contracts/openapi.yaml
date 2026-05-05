@@ -83,6 +83,48 @@ paths:
               schema:
                 $ref: ./problem_details.schema.json
 
+  /application-architectures:
+    post:
+      summary: Validate and upsert an application architecture document
+      description: Upserts the submitted CALM application architecture keyed by `metadata.AssetID` + `metadata.version`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./application_architecture.schema.json
+      responses:
+        "201":
+          description: Created (new AssetID + version)
+          content:
+            application/json:
+              schema:
+                $ref: ./application_architecture.schema.json
+        "200":
+          description: Updated (existing AssetID + version)
+          content:
+            application/json:
+              schema:
+                $ref: ./application_architecture.schema.json
+        "400":
+          description: Malformed/unparseable JSON
+          content:
+            application/problem+json:
+              schema:
+                $ref: ./problem_details.schema.json
+        "422":
+          description: CALM schema or metadata validation failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: ./problem_details.schema.json
+        "500":
+          description: Internal server error (e.g., persistence failure)
+          content:
+            application/problem+json:
+              schema:
+                $ref: ./problem_details.schema.json
+
   /components/{component_id}:
     get:
       summary: Get a component node by node-id

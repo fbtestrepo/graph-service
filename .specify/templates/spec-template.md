@@ -9,7 +9,10 @@
 
 - **Hexagonal Architecture**: Business rules belong in `src/core/` and must not import framework/driver
   libraries (e.g., `fastapi`, `pymongo`/`motor`, `ldap3`).
-- **Specs-first**: Any API contract change MUST start by updating `specs/` (OpenAPI + JSON Schemas).
+- **Specs-first**: Any change to feature intent, behavioral requirements, or software specifications
+  MUST start by updating `specs/`.
+- **Canonical contracts**: Any change to shared or canonical data contracts MUST start by updating
+  `schemas/`.
 - **Inbound validation**: All JSON payload validation occurs in the inbound adapter via Pydantic
   schemas in `src/adapters/inbound/api/schemas/` before calling core use cases.
 - **Error mapping**: Domain exceptions live in `src/core/exceptions/` and are mapped to HTTP in
