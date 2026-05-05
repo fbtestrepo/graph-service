@@ -7,11 +7,11 @@
   "effective-date": "2025-01-01T14:00:00Z",
   "workloads": [
     {
-      "workload-id": "AIMC/repos/rw-orchestrator-svc_ba0116_pq0177",
+      "id": "AIMC/repos/rw-orchestrator-svc_ba0116_pq0177",
       "asset-id": "pq0177"
     },
     {
-      "workload-id": "AIMC/repos/rw-cap-svc_ba0116_dh6980",
+      "id": "AIMC/repos/rw-cap-svc_ba0116_dh6980",
       "asset-id": "dh6980"
     }
   ]
