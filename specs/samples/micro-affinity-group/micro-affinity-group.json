@@ -1,0 +1,18 @@
+{
+  "micro-ag-id": "mAG_A",
+  "name": "Micro Affinity Group A",
+  "parent-asset-id": "ba0270",
+  "architecture-version": "x.y.z",
+  "environment": "production",
+  "effective-date": "2024-01-01T14:00:00Z",
+  "workloads": [
+    {
+      "workload-id": "repository_id_1",
+      "asset-id": "ba0270"
+    },
+    {
+      "workload-id": "repository_id_2",
+      "asset-id": "ba0271"
+    }
+  ]
+}
