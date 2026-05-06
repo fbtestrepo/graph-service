@@ -98,6 +98,25 @@ Purpose: Validate and upsert a CALM application architecture document keyed by
   - `422 application/problem+json` for CALM schema or metadata validation failures
   - `500 application/problem+json` when persistence fails for any reason
 
+### POST /micro-affinity-groups
+
+Purpose: Validate and upsert a micro affinity group document keyed by `micro-ag-id` +
+`environment` + `architecture-version`.
+
+- Request: `application/json` body conforming to `micro_affinity_group.schema.json`
+- Success responses:
+  - `201 Created` when the service creates a new record for the supplied unique key
+  - `200 OK` when the service overwrites an existing record for the supplied unique key
+- Response body: the stored micro affinity group document
+- Side effect (on success): The service persists the payload to MongoDB collection
+  `micro-affinity-groups`, overwriting any existing document that matches the same
+  `micro-ag-id + environment + architecture-version` tuple.
+- Error responses:
+  - `400 application/problem+json` for malformed/unparseable JSON
+  - `422 application/problem+json` for request-schema, field-format, or cross-collection
+    validation failures
+  - `500 application/problem+json` when persistence fails for any reason
+
 ### GET /components/{component_id}
 
 Purpose: Retrieve a component node by `node-id` (path parameter `{component_id}` is treated as `node-id`).

@@ -1,0 +1,55 @@
+openapi: 3.1.0
+info:
+  title: Dependency Graph Service API - Micro Affinity Group Submission
+  version: 0.1.0
+  description: Working-copy contract for the micro affinity group submission feature.
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+
+# NOTE: Working copy for this feature.
+# Authoritative implementation-time contracts for codegen are expected to live under:
+# specs/001-service-skeleton/contracts/
+
+paths:
+  /micro-affinity-groups:
+    post:
+      tags:
+        - micro-affinity-groups
+      summary: Validate and upsert a micro affinity group document
+      operationId: postMicroAffinityGroup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./micro_affinity_group.schema.json
+      responses:
+        '201':
+          description: Created a new micro affinity group document for the supplied unique key.
+          content:
+            application/json:
+              schema:
+                $ref: ./micro_affinity_group.schema.json
+        '200':
+          description: Overwrote an existing micro affinity group document for the supplied unique key.
+          content:
+            application/json:
+              schema:
+                $ref: ./micro_affinity_group.schema.json
+        '400':
+          description: Malformed JSON request body.
+          content:
+            application/problem+json:
+              schema:
+                $ref: ../../../specs/001-service-skeleton/contracts/problem_details.schema.json
+        '422':
+          description: Schema, format, or cross-collection workload validation failure.
+          content:
+            application/problem+json:
+              schema:
+                $ref: ../../../specs/001-service-skeleton/contracts/problem_details.schema.json
+        '500':
+          description: Unhandled infrastructure failure during persistence.
+          content:
+            application/problem+json:
+              schema:
+                $ref: ../../../specs/001-service-skeleton/contracts/problem_details.schema.json

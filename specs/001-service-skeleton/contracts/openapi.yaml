@@ -125,6 +125,48 @@ paths:
               schema:
                 $ref: ./problem_details.schema.json
 
+  /micro-affinity-groups:
+    post:
+      summary: Validate and upsert a micro affinity group document
+      description: Upserts the submitted micro affinity group keyed by `micro-ag-id` + `environment` + `architecture-version`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./micro_affinity_group.schema.json
+      responses:
+        "201":
+          description: Created (new micro-ag-id + environment + architecture-version)
+          content:
+            application/json:
+              schema:
+                $ref: ./micro_affinity_group.schema.json
+        "200":
+          description: Updated (existing micro-ag-id + environment + architecture-version)
+          content:
+            application/json:
+              schema:
+                $ref: ./micro_affinity_group.schema.json
+        "400":
+          description: Malformed/unparseable JSON
+          content:
+            application/problem+json:
+              schema:
+                $ref: ./problem_details.schema.json
+        "422":
+          description: Request-schema, field-format, or cross-collection workload validation failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: ./problem_details.schema.json
+        "500":
+          description: Internal server error (e.g., persistence failure)
+          content:
+            application/problem+json:
+              schema:
+                $ref: ./problem_details.schema.json
+
   /components/{component_id}:
     get:
       summary: Get a component node by node-id

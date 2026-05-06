@@ -8,6 +8,9 @@ from src.adapters.inbound.api.routers.application_architectures import (
 from src.adapters.inbound.api.routers.component_validation import router as component_validation_router
 from src.adapters.inbound.api.routers.components import router as components_router
 from src.adapters.inbound.api.routers.health import router as health_router
+from src.adapters.inbound.api.routers.micro_affinity_groups import (
+    router as micro_affinity_groups_router,
+)
 from src.adapters.outbound.ldap.client import create_ldap_connection
 from src.adapters.outbound.ldap.identity_provider import LdapIdentityProvider
 from src.adapters.outbound.mongodb.application_architecture_repository import (
@@ -17,6 +20,9 @@ from src.adapters.outbound.mongodb.client import create_mongo_client
 from src.adapters.outbound.mongodb.component_node_repository import MongoComponentNodeRepository
 from src.adapters.outbound.mongodb.component_payload_repository import MongoComponentPayloadRepository
 from src.adapters.outbound.mongodb.graph_repository import MongoGraphRepository
+from src.adapters.outbound.mongodb.micro_affinity_group_repository import (
+    MongoMicroAffinityGroupRepository,
+)
 from src.infrastructure.config.settings import load_settings
 from src.infrastructure.errors.handlers import register_exception_handlers
 from src.infrastructure.errors.validation import register_validation_error_handlers
@@ -32,6 +38,7 @@ def create_app() -> FastAPI:
     app.include_router(component_validation_router)
     app.include_router(components_router)
     app.include_router(application_architectures_router)
+    app.include_router(micro_affinity_groups_router)
 
     settings = load_settings()
     app.state.settings = settings
@@ -45,6 +52,9 @@ def create_app() -> FastAPI:
         app.state.component_payload_repository = MongoComponentPayloadRepository(app.state.mongo_db)
         app.state.component_node_repository = MongoComponentNodeRepository(app.state.mongo_db)
         app.state.application_architecture_repository = MongoApplicationArchitectureRepository(
+            app.state.mongo_db
+        )
+        app.state.micro_affinity_group_repository = MongoMicroAffinityGroupRepository(
             app.state.mongo_db
         )
 

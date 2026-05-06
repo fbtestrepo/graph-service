@@ -23,3 +23,7 @@ def get_component_node_repository(request: Request) -> Any:
 
 def get_application_architecture_repository(request: Request) -> Any:
     return request.app.state.application_architecture_repository
+
+
+def get_micro_affinity_group_repository(request: Request) -> Any:
+    return request.app.state.micro_affinity_group_repository

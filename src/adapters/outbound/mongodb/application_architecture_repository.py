@@ -25,3 +25,17 @@ class MongoApplicationArchitectureRepository(ApplicationArchitectureRepository):
 
         result = collection.update_one(document_filter, update_document, upsert=True)
         return result.upserted_id is not None
+
+    def get_by_asset_id_and_version(
+        self,
+        asset_id: str,
+        version: str,
+    ) -> ApplicationArchitecturePayload | None:
+        document = self._db.get_collection("application-architectures").find_one(
+            {"metadata.AssetID": asset_id, "metadata.version": version}
+        )
+        if document is None:
+            return None
+
+        document.pop("_id", None)
+        return document

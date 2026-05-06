@@ -42,6 +42,48 @@ fi
   --disable-timestamp \
   --output-model-type pydantic_v2.BaseModel
 
+"$PYTHON_BIN" -m datamodel_code_generator \
+  --input "$CONTRACTS_DIR/micro_affinity_group.schema.json" \
+  --input-file-type jsonschema \
+  --output "$OUT_DIR/micro_affinity_group.py" \
+  --disable-timestamp \
+  --output-model-type pydantic_v2.BaseModel
+
+"$PYTHON_BIN" -c "
+from pathlib import Path
+
+schema_path = Path(r'$OUT_DIR') / 'micro_affinity_group.py'
+schema = schema_path.read_text(encoding='utf-8')
+if 'class MicroAffinityGroup(BaseModel):' not in schema:
+    raise SystemExit('Expected micro_affinity_group.py to contain class MicroAffinityGroup')
+schema = schema.replace('class MicroAffinityGroup(BaseModel):', 'class MicroAffinityGroupDocument(BaseModel):', 1)
+schema += '''
+
+from pydantic import model_validator
+
+
+class MicroAffinityGroup(MicroAffinityGroupDocument):
+  @model_validator(mode='after')
+  def _validate_unique_workload_ids(self) -> MicroAffinityGroup:
+    seen: set[str] = set()
+    duplicates: list[str] = []
+    for workload in self.workloads:
+      if workload.id in seen and workload.id not in duplicates:
+        duplicates.append(workload.id)
+      seen.add(workload.id)
+
+    if duplicates:
+      duplicate_list = ', '.join(sorted(duplicates))
+      raise ValueError(f'workloads contain duplicate id values: {duplicate_list}')
+
+    return self
+
+
+__all__ = ['MicroAffinityGroup', 'MicroAffinityGroupDocument', 'MicroAffinityGroupWorkload']
+'''
+schema_path.write_text(schema, encoding='utf-8')
+"
+
 tmp_codegen_input_dir="$ROOT_DIR/tmp_codegen_application_architecture_input"
 tmp_codegen_file="$ROOT_DIR/tmp_codegen_application_architecture.py"
 rm -rf "$tmp_codegen_input_dir" "$tmp_codegen_file"

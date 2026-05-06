@@ -17,3 +17,13 @@ class ApplicationArchitectureRepository(ABC):
         """
 
         raise NotImplementedError
+
+    @abstractmethod
+    def get_by_asset_id_and_version(
+        self,
+        asset_id: str,
+        version: str,
+    ) -> ApplicationArchitecturePayload | None:
+        """Return one application architecture payload by AssetID + version."""
+
+        raise NotImplementedError
