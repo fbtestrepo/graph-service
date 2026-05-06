@@ -1,0 +1,30 @@
+{
+  "micro-ag-id": "mAG_A",
+  "name": "Micro Affinity Group A",
+  "parent-asset-id": "ba0270",
+  "architecture-version": "1.0.0",
+  "environment": "production",
+  "effective-date": "2025-01-01T14:00:00Z",
+  "workloads": [
+    {
+      "id": "AIMC/repos/rw-orchestrator-svc_ba0116_pq0177",
+      "asset-id": "pq0177"
+    },
+    {
+      "id": "AIMC/repos/rw-cap-svc_ba0116_dh6980",
+      "asset-id": "dh6980"
+    }
+  ],
+  "relationships": [
+    {
+      "source-workload": {
+        "id": "AIMC/repos/rw-orchestrator-svc_ba0116_pq0177",
+        "asset-id": "pq0177"
+      },
+      "destination-workload": {
+        "id": "AIMC/repos/rw-cap-svc_ba0116_dh6980",
+        "asset-id": "dh6980"
+      }
+    }
+  ]
+}
