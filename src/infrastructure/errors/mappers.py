@@ -2,11 +2,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from src.core.exceptions.application_architecture_not_found import ApplicationArchitectureNotFound
 from src.core.exceptions.authentication_failed import AuthenticationFailed
 from src.core.exceptions.authorization_denied import AuthorizationDenied
 from src.core.exceptions.circular_dependency_detected import CircularDependencyDetected
 from src.core.exceptions.component_not_found import ComponentNotFound
 from src.core.exceptions.duplicate_dependency_edge import DuplicateDependencyEdge
+from src.core.exceptions.micro_affinity_group_workload_mismatch import (
+    MicroAffinityGroupWorkloadMismatch,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,6 +30,16 @@ _MAPPINGS: dict[type[Exception], DomainErrorMapping] = {
     ),
     AuthenticationFailed: DomainErrorMapping(status=401, title="Unauthorized", error_code="authentication_failed"),
     AuthorizationDenied: DomainErrorMapping(status=403, title="Forbidden", error_code="authorization_denied"),
+    ApplicationArchitectureNotFound: DomainErrorMapping(
+        status=422,
+        title="Unprocessable Entity",
+        error_code="application_architecture_not_found",
+    ),
+    MicroAffinityGroupWorkloadMismatch: DomainErrorMapping(
+        status=422,
+        title="Unprocessable Entity",
+        error_code="micro_affinity_group_workload_mismatch",
+    ),
 }
 
 

@@ -7,11 +7,15 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from src.core.exceptions.application_architecture_not_found import ApplicationArchitectureNotFound
 from src.core.exceptions.authentication_failed import AuthenticationFailed
 from src.core.exceptions.authorization_denied import AuthorizationDenied
 from src.core.exceptions.circular_dependency_detected import CircularDependencyDetected
 from src.core.exceptions.component_not_found import ComponentNotFound
 from src.core.exceptions.duplicate_dependency_edge import DuplicateDependencyEdge
+from src.core.exceptions.micro_affinity_group_workload_mismatch import (
+    MicroAffinityGroupWorkloadMismatch,
+)
 from src.infrastructure.errors.mappers import map_domain_exception
 from src.infrastructure.errors.problem_details import problem_details_response
 
@@ -64,6 +68,8 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(CircularDependencyDetected, cast(object, domain_exception_handler))
     app.add_exception_handler(AuthenticationFailed, cast(object, domain_exception_handler))
     app.add_exception_handler(AuthorizationDenied, cast(object, domain_exception_handler))
+    app.add_exception_handler(ApplicationArchitectureNotFound, cast(object, domain_exception_handler))
+    app.add_exception_handler(MicroAffinityGroupWorkloadMismatch, cast(object, domain_exception_handler))
 
     app.add_exception_handler(StarletteHTTPException, cast(object, http_exception_handler))
     app.add_exception_handler(Exception, cast(object, unhandled_exception_handler))

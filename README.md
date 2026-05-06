@@ -38,6 +38,12 @@ The CALM application architecture endpoint uses a service-level wrapper contract
 canonical CALM entry schema in `schemas/calm/v1_2/calm.json` and adds the required root
 `metadata.AssetID`, `metadata.version`, and `metadata.created` constraints.
 
+The micro affinity group endpoint uses
+`specs/001-service-skeleton/contracts/micro_affinity_group.schema.json` as its authoritative
+service contract. Generated schema code is extended with a stable wrapper in
+`src/adapters/inbound/api/schemas/micro_affinity_group.py` so duplicate workload IDs are rejected
+before the core use case runs.
+
 ```bash
 ./generate_inbound_models.sh
 git diff --exit-code src/adapters/inbound/api/schemas
@@ -49,4 +55,13 @@ git diff --exit-code src/adapters/inbound/api/schemas
 - `python check_core_purity.py`
 - `./generate_inbound_models.sh` + drift check for `src/adapters/inbound/api/schemas`
 - `pytest`
+
+Targeted micro-affinity-group verification:
+
+```bash
+pytest tests/test_micro_affinity_groups_endpoint.py \
+	tests/test_micro_affinity_group_use_case.py \
+	tests/test_micro_affinity_groups_persistence.py
+GRAPH_SERVICE_RUN_PERF_SMOKE=1 pytest tests/test_perf_smoke_micro_affinity_groups.py
+```
 
