@@ -23,6 +23,10 @@ from src.adapters.outbound.mongodb.graph_repository import MongoGraphRepository
 from src.adapters.outbound.mongodb.micro_affinity_group_repository import (
     MongoMicroAffinityGroupRepository,
 )
+from src.adapters.outbound.mongodb.micro_affinity_group_processed_repository import (
+    MongoMicroAffinityGroupProcessedRepository,
+)
+from src.adapters.outbound.mongodb.transaction_manager import MongoTransactionManager
 from src.infrastructure.config.settings import load_settings
 from src.infrastructure.errors.handlers import register_exception_handlers
 from src.infrastructure.errors.validation import register_validation_error_handlers
@@ -45,26 +49,50 @@ def create_app() -> FastAPI:
 
     @app.on_event("startup")
     async def _startup() -> None:
-        mongo_client = create_mongo_client(settings.mongodb_uri)
-        app.state.mongo_client = mongo_client
-        app.state.mongo_db = mongo_client[settings.mongodb_database]
-        app.state.graph_repository = MongoGraphRepository(app.state.mongo_db)
-        app.state.component_payload_repository = MongoComponentPayloadRepository(app.state.mongo_db)
-        app.state.component_node_repository = MongoComponentNodeRepository(app.state.mongo_db)
-        app.state.application_architecture_repository = MongoApplicationArchitectureRepository(
-            app.state.mongo_db
-        )
-        app.state.micro_affinity_group_repository = MongoMicroAffinityGroupRepository(
-            app.state.mongo_db
-        )
+        if not hasattr(app.state, "mongo_client"):
+            mongo_client = create_mongo_client(settings.mongodb_uri)
+            app.state.mongo_client = mongo_client
 
-        ldap_conn = create_ldap_connection(
-            server_uri=settings.ldap_server_uri,
-            bind_dn=settings.ldap_bind_dn,
-            bind_password=settings.ldap_bind_password,
-        )
-        app.state.ldap_connection = ldap_conn
-        app.state.identity_provider = LdapIdentityProvider(ldap_conn)
+        if not hasattr(app.state, "mongo_db"):
+            app.state.mongo_db = app.state.mongo_client[settings.mongodb_database]
+
+        if not hasattr(app.state, "graph_repository"):
+            app.state.graph_repository = MongoGraphRepository(app.state.mongo_db)
+
+        if not hasattr(app.state, "component_payload_repository"):
+            app.state.component_payload_repository = MongoComponentPayloadRepository(app.state.mongo_db)
+
+        if not hasattr(app.state, "component_node_repository"):
+            app.state.component_node_repository = MongoComponentNodeRepository(app.state.mongo_db)
+
+        if not hasattr(app.state, "application_architecture_repository"):
+            app.state.application_architecture_repository = MongoApplicationArchitectureRepository(
+                app.state.mongo_db
+            )
+
+        if not hasattr(app.state, "micro_affinity_group_repository"):
+            app.state.micro_affinity_group_repository = MongoMicroAffinityGroupRepository(
+                app.state.mongo_db
+            )
+
+        if not hasattr(app.state, "micro_affinity_group_processed_repository"):
+            app.state.micro_affinity_group_processed_repository = (
+                MongoMicroAffinityGroupProcessedRepository(app.state.mongo_db)
+            )
+
+        if not hasattr(app.state, "transaction_manager"):
+            app.state.transaction_manager = MongoTransactionManager(app.state.mongo_client)
+
+        if not hasattr(app.state, "ldap_connection"):
+            ldap_conn = create_ldap_connection(
+                server_uri=settings.ldap_server_uri,
+                bind_dn=settings.ldap_bind_dn,
+                bind_password=settings.ldap_bind_password,
+            )
+            app.state.ldap_connection = ldap_conn
+
+        if not hasattr(app.state, "identity_provider"):
+            app.state.identity_provider = LdapIdentityProvider(app.state.ldap_connection)
 
     @app.on_event("shutdown")
     async def _shutdown() -> None:

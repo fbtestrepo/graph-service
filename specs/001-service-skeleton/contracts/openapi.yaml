@@ -141,13 +141,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./micro_affinity_group.schema.json
+                $ref: ./micro_affinity_group_processed.schema.json
         "200":
           description: Updated (existing micro-ag-id + environment + architecture-version)
           content:
             application/json:
               schema:
-                $ref: ./micro_affinity_group.schema.json
+                $ref: ./micro_affinity_group_processed.schema.json
         "400":
           description: Malformed/unparseable JSON
           content:

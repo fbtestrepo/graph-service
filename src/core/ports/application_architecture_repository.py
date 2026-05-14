@@ -9,7 +9,13 @@ ApplicationArchitecturePayload = dict[str, Any]
 
 class ApplicationArchitectureRepository(ABC):
     @abstractmethod
-    def upsert(self, asset_id: str, version: str, payload: ApplicationArchitecturePayload) -> bool:
+    def upsert(
+        self,
+        asset_id: str,
+        version: str,
+        payload: ApplicationArchitecturePayload,
+        session: Any | None = None,
+    ) -> bool:
         """Upsert an application architecture payload by AssetID + version.
 
         Returns True if the payload was created (inserted), False if it updated an existing
@@ -23,6 +29,7 @@ class ApplicationArchitectureRepository(ABC):
         self,
         asset_id: str,
         version: str,
+        session: Any | None = None,
     ) -> ApplicationArchitecturePayload | None:
         """Return one application architecture payload by AssetID + version."""
 
