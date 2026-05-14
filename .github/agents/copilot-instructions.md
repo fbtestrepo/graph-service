@@ -1,6 +1,6 @@
 # Dependency Graph Service API Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-05-05
+Auto-generated from all feature plans. Last updated: 2026-05-06
 
 ## Active Technologies
 - Python 3.12 + FastAPI, Pydantic, Motor (MongoDB Atlas), LDAP3 (001-service-skeleton)
@@ -14,6 +14,8 @@ Auto-generated from all feature plans. Last updated: 2026-05-05
 - MongoDB Atlas / MongoDB collection `application-architectures` keyed by `metadata.AssetID` + `metadata.version` (006-calm-architecture-ingest)
 - Python 3.12+ + FastAPI, Pydantic v2, pymongo, pydantic-settings, datamodel-code-generator, pytest, httpx/TestClient, testcontainers[mongodb] (007-add-micro-affinity-endpoint)
 - MongoDB Atlas / MongoDB collection `micro-affinity-groups`, plus read access to `application-architectures` for cross-collection validation (007-add-micro-affinity-endpoint)
+- Python 3.12+ + FastAPI, Pydantic v2, pymongo, pydantic-settings, datamodel-code-generator, pytest, httpx/TestClient, testcontainers[mongodb], Python standard-library `logging` (008-add-mag-relationships)
+- MongoDB Atlas / MongoDB collections `micro-affinity-groups` (raw input), `micro-affinity-groups-processed` (transformed output), plus read access to `application-architectures` for transformation lookups (008-add-mag-relationships)
 
 - Python 3.12 (project baseline for scaffolding) + FastAPI, Pydantic, Motor (MongoDB), LDAP3 (001-service-skeleton)
 
@@ -34,9 +36,9 @@ tests/
 Python 3.12 (project baseline for scaffolding): Follow standard conventions
 
 ## Recent Changes
+- 008-add-mag-relationships: Added Python 3.12+ + FastAPI, Pydantic v2, pymongo, pydantic-settings, datamodel-code-generator, pytest, httpx/TestClient, testcontainers[mongodb], Python standard-library `logging`
 - 007-add-micro-affinity-endpoint: Added Python 3.12+ + FastAPI, Pydantic v2, pymongo, pydantic-settings, datamodel-code-generator, pytest, httpx/TestClient, testcontainers[mongodb]
 - 006-calm-architecture-ingest: Added Python 3.12+ + FastAPI, Pydantic v2, pymongo, pydantic-settings, datamodel-code-generator, pytest, httpx/TestClient, testcontainers[mongodb]
-- 005-component-dependencies: Added Python 3.12+ + FastAPI, Pydantic v2, PyMongo
 
 
 <!-- MANUAL ADDITIONS START -->

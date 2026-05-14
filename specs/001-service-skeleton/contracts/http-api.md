@@ -107,10 +107,15 @@ Purpose: Validate and upsert a micro affinity group document keyed by `micro-ag-
 - Success responses:
   - `201 Created` when the service creates a new record for the supplied unique key
   - `200 OK` when the service overwrites an existing record for the supplied unique key
-- Response body: the stored micro affinity group document
-- Side effect (on success): The service persists the payload to MongoDB collection
-  `micro-affinity-groups`, overwriting any existing document that matches the same
-  `micro-ag-id + environment + architecture-version` tuple.
+- Response body: the stored processed micro affinity group document conforming to
+  `micro_affinity_group_processed.schema.json`
+- Transactional side effects (on success):
+  - The service persists the validated request payload to MongoDB collection
+    `micro-affinity-groups`.
+  - The service persists the relationship-enriched projection to MongoDB collection
+    `micro-affinity-groups-processed`.
+  - Both writes occur in one transaction and overwrite any existing document that matches the same
+    `micro-ag-id + environment + architecture-version` tuple.
 - Error responses:
   - `400 application/problem+json` for malformed/unparseable JSON
   - `422 application/problem+json` for request-schema, field-format, or cross-collection

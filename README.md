@@ -40,9 +40,18 @@ canonical CALM entry schema in `schemas/calm/v1_2/calm.json` and adds the requir
 
 The micro affinity group endpoint uses
 `specs/001-service-skeleton/contracts/micro_affinity_group.schema.json` as its authoritative
-service contract. Generated schema code is extended with a stable wrapper in
+service contract, and the enriched success response uses
+`specs/001-service-skeleton/contracts/micro_affinity_group_processed.schema.json`.
+Generated schema code is extended with a stable wrapper in
 `src/adapters/inbound/api/schemas/micro_affinity_group.py` so duplicate workload IDs are rejected
-before the core use case runs.
+before the core use case runs; the processed response model is generated into
+`src/adapters/inbound/api/schemas/micro_affinity_group_processed.py`.
+
+The `POST /micro-affinity-groups` flow now performs a transactional dual write:
+
+- raw validated payloads are stored in `micro-affinity-groups`
+- relationship-enriched projections are stored in `micro-affinity-groups-processed`
+- both writes share one MongoDB transaction, so processed-write failures roll back the raw write
 
 ```bash
 ./generate_inbound_models.sh
@@ -60,6 +69,7 @@ Targeted micro-affinity-group verification:
 
 ```bash
 pytest tests/test_micro_affinity_groups_endpoint.py \
+	tests/test_micro_affinity_group_relationship_mapper.py \
 	tests/test_micro_affinity_group_use_case.py \
 	tests/test_micro_affinity_groups_persistence.py
 GRAPH_SERVICE_RUN_PERF_SMOKE=1 pytest tests/test_perf_smoke_micro_affinity_groups.py

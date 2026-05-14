@@ -1,0 +1,55 @@
+openapi: 3.1.0
+info:
+  title: Dependency Graph Service API - Micro Affinity Group Relationship Enrichment
+  version: 0.1.0
+  description: Working-copy contract for the micro affinity group relationship-enrichment feature.
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+
+# NOTE: Working copy for this feature.
+# Authoritative implementation-time contracts are expected to live under:
+# specs/001-service-skeleton/contracts/
+
+paths:
+  /micro-affinity-groups:
+    post:
+      tags:
+        - micro-affinity-groups
+      summary: Persist a raw micro affinity group and return the enriched processed document
+      operationId: postMicroAffinityGroupProcessed
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../../../specs/001-service-skeleton/contracts/micro_affinity_group.schema.json
+      responses:
+        '201':
+          description: Created a new raw and processed micro affinity group record set for the supplied unique key.
+          content:
+            application/json:
+              schema:
+                $ref: ./micro_affinity_group_processed.schema.json
+        '200':
+          description: Overwrote the existing raw and processed micro affinity group record set for the supplied unique key.
+          content:
+            application/json:
+              schema:
+                $ref: ./micro_affinity_group_processed.schema.json
+        '400':
+          description: Malformed JSON request body.
+          content:
+            application/problem+json:
+              schema:
+                $ref: ../../../specs/001-service-skeleton/contracts/problem_details.schema.json
+        '422':
+          description: Request validation or relationship transformation resolution failure.
+          content:
+            application/problem+json:
+              schema:
+                $ref: ../../../specs/001-service-skeleton/contracts/problem_details.schema.json
+        '500':
+          description: Unhandled infrastructure or transaction failure.
+          content:
+            application/problem+json:
+              schema:
+                $ref: ../../../specs/001-service-skeleton/contracts/problem_details.schema.json

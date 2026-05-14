@@ -27,3 +27,11 @@ def get_application_architecture_repository(request: Request) -> Any:
 
 def get_micro_affinity_group_repository(request: Request) -> Any:
     return request.app.state.micro_affinity_group_repository
+
+
+def get_micro_affinity_group_processed_repository(request: Request) -> Any:
+    return request.app.state.micro_affinity_group_processed_repository
+
+
+def get_transaction_manager(request: Request) -> Any:
+    return request.app.state.transaction_manager

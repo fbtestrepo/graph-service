@@ -28,9 +28,28 @@ def _application_architecture_payload() -> dict[str, Any]:
                     "code-repo": "AIMC/repos/rw-orchestrator-svc_ba0116_pq0177",
                     "asset-id": "pq0177",
                 },
+            },
+            {
+                "unique-id": "node-2",
+                "node-type": "service",
+                "name": "RW CAP Service",
+                "description": "Service backing workload 2",
+                "metadata": {
+                    "code-repo": "AIMC/repos/rw-cap-svc_ba0116_dh6980",
+                    "asset-id": "dh6980",
+                },
+            },
+        ],
+        "relationships": [
+            {
+                "relationship-type": {
+                    "connects": {
+                        "source": {"node": "node-1"},
+                        "destination": {"node": "node-2"},
+                    }
+                }
             }
         ],
-        "relationships": [],
     }
 
 
@@ -55,7 +74,12 @@ def _valid_payload(index: int) -> dict[str, Any]:
 class FakeApplicationArchitectureRepository:
     store: dict[tuple[str, str], dict[str, Any]] = field(default_factory=dict)
 
-    def get_by_asset_id_and_version(self, asset_id: str, version: str) -> dict[str, Any] | None:
+    def get_by_asset_id_and_version(
+        self,
+        asset_id: str,
+        version: str,
+        session: Any | None = None,
+    ) -> dict[str, Any] | None:
         return self.store.get((asset_id, version))
 
 
@@ -69,11 +93,36 @@ class FakeMicroAffinityGroupRepository:
         environment: str,
         architecture_version: str,
         payload: dict[str, Any],
+        session: Any | None = None,
     ) -> bool:
         key = (micro_ag_id, environment, architecture_version)
         created = key not in self.store
         self.store[key] = payload
         return created
+
+
+@dataclass(slots=True)
+class FakeMicroAffinityGroupProcessedRepository:
+    store: dict[tuple[str, str, str], dict[str, Any]] = field(default_factory=dict)
+
+    def upsert(
+        self,
+        micro_ag_id: str,
+        environment: str,
+        architecture_version: str,
+        payload: dict[str, Any],
+        session: Any | None = None,
+    ) -> bool:
+        key = (micro_ag_id, environment, architecture_version)
+        created = key not in self.store
+        self.store[key] = payload
+        return created
+
+
+@dataclass(slots=True)
+class FakeTransactionManager:
+    def execute(self, operation):
+        return operation(None)
 
 
 @pytest.mark.skipif(
@@ -88,6 +137,10 @@ def test_micro_affinity_groups_upsert_perf_smoke() -> None:
             store={("ba0270", "1.0.0"): _application_architecture_payload()}
         )
         client.app.state.micro_affinity_group_repository = FakeMicroAffinityGroupRepository()
+        client.app.state.micro_affinity_group_processed_repository = (
+            FakeMicroAffinityGroupProcessedRepository()
+        )
+        client.app.state.transaction_manager = FakeTransactionManager()
 
         fast_successes = 0
         total_successes = 0

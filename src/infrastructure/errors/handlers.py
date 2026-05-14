@@ -16,6 +16,9 @@ from src.core.exceptions.duplicate_dependency_edge import DuplicateDependencyEdg
 from src.core.exceptions.micro_affinity_group_workload_mismatch import (
     MicroAffinityGroupWorkloadMismatch,
 )
+from src.core.exceptions.micro_affinity_group_relationship_resolution_error import (
+    MicroAffinityGroupRelationshipResolutionError,
+)
 from src.infrastructure.errors.mappers import map_domain_exception
 from src.infrastructure.errors.problem_details import problem_details_response
 
@@ -70,6 +73,10 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AuthorizationDenied, cast(object, domain_exception_handler))
     app.add_exception_handler(ApplicationArchitectureNotFound, cast(object, domain_exception_handler))
     app.add_exception_handler(MicroAffinityGroupWorkloadMismatch, cast(object, domain_exception_handler))
+    app.add_exception_handler(
+        MicroAffinityGroupRelationshipResolutionError,
+        cast(object, domain_exception_handler),
+    )
 
     app.add_exception_handler(StarletteHTTPException, cast(object, http_exception_handler))
     app.add_exception_handler(Exception, cast(object, unhandled_exception_handler))

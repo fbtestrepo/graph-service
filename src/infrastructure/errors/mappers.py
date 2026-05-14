@@ -11,6 +11,9 @@ from src.core.exceptions.duplicate_dependency_edge import DuplicateDependencyEdg
 from src.core.exceptions.micro_affinity_group_workload_mismatch import (
     MicroAffinityGroupWorkloadMismatch,
 )
+from src.core.exceptions.micro_affinity_group_relationship_resolution_error import (
+    MicroAffinityGroupRelationshipResolutionError,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,6 +42,11 @@ _MAPPINGS: dict[type[Exception], DomainErrorMapping] = {
         status=422,
         title="Unprocessable Entity",
         error_code="micro_affinity_group_workload_mismatch",
+    ),
+    MicroAffinityGroupRelationshipResolutionError: DomainErrorMapping(
+        status=422,
+        title="Unprocessable Entity",
+        error_code="micro_affinity_group_relationship_resolution_error",
     ),
 }
 

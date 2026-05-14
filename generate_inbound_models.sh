@@ -43,6 +43,13 @@ fi
   --output-model-type pydantic_v2.BaseModel
 
 "$PYTHON_BIN" -m datamodel_code_generator \
+  --input "$CONTRACTS_DIR/micro_affinity_group_processed.schema.json" \
+  --input-file-type jsonschema \
+  --output "$OUT_DIR/micro_affinity_group_processed.py" \
+  --disable-timestamp \
+  --output-model-type pydantic_v2.BaseModel
+
+"$PYTHON_BIN" -m datamodel_code_generator \
   --input "$CONTRACTS_DIR/micro_affinity_group.schema.json" \
   --input-file-type jsonschema \
   --output "$OUT_DIR/micro_affinity_group.py" \
