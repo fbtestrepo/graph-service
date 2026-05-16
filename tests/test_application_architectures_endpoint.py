@@ -7,6 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.infrastructure.main import create_app
+from tests.conftest import APPLICATION_ARCHITECTURES_PATH
 
 
 def _valid_payload(
@@ -48,7 +49,7 @@ def test_post_application_architectures_first_time_returns_201_and_echoes_payloa
         client.app.state.application_architecture_repository = repo
 
         request_payload = _valid_payload(asset_id="Asset123", version="1.0.0")
-        response = client.post("/application-architectures", json=request_payload)
+        response = client.post(APPLICATION_ARCHITECTURES_PATH, json=request_payload)
 
     assert response.status_code == 201
     assert response.json() == request_payload
@@ -61,7 +62,7 @@ def test_post_application_architectures_second_time_returns_200_and_replaces_pay
         client.app.state.application_architecture_repository = repo
 
         first_payload = _valid_payload(asset_id="Asset123", version="1.0.0")
-        first_response = client.post("/application-architectures", json=first_payload)
+        first_response = client.post(APPLICATION_ARCHITECTURES_PATH, json=first_payload)
         assert first_response.status_code == 201
 
         second_payload = _valid_payload(
@@ -77,7 +78,7 @@ def test_post_application_architectures_second_time_returns_200_and_replaces_pay
                 "description": "Updated node payload",
             }
         ]
-        second_response = client.post("/application-architectures", json=second_payload)
+        second_response = client.post(APPLICATION_ARCHITECTURES_PATH, json=second_payload)
 
     assert second_response.status_code == 200
     assert second_response.json() == second_payload
@@ -90,13 +91,13 @@ def test_post_application_architectures_different_version_returns_201() -> None:
         client.app.state.application_architecture_repository = repo
 
         first_response = client.post(
-            "/application-architectures",
+            APPLICATION_ARCHITECTURES_PATH,
             json=_valid_payload(asset_id="Asset123", version="1.0.0"),
         )
         assert first_response.status_code == 201
 
         second_response = client.post(
-            "/application-architectures",
+            APPLICATION_ARCHITECTURES_PATH,
             json=_valid_payload(asset_id="Asset123", version="1.0.1"),
         )
 
@@ -107,7 +108,7 @@ def test_post_application_architectures_malformed_json_returns_400_problem_detai
     app = create_app()
     with TestClient(app) as client:
         response = client.post(
-            "/application-architectures",
+            APPLICATION_ARCHITECTURES_PATH,
             data="{",
             headers={"content-type": "application/json"},
         )
@@ -138,7 +139,7 @@ def test_post_application_architectures_invalid_payloads_return_422_problem_deta
         client.app.state.application_architecture_repository = repo
 
         base = _valid_payload(asset_id="Asset123", version="1.0.0")
-        response = client.post("/application-architectures", json=payload(base))
+        response = client.post(APPLICATION_ARCHITECTURES_PATH, json=payload(base))
 
     assert response.status_code == 422
     assert response.headers["content-type"].startswith("application/problem+json")
@@ -146,3 +147,16 @@ def test_post_application_architectures_invalid_payloads_return_422_problem_deta
     assert body["status"] == 422
     assert body.get("error_code") == "validation_failed"
     assert repo.store == {}
+
+
+def test_root_application_architectures_path_is_not_supported() -> None:
+    app = create_app()
+    with TestClient(app) as client:
+        response = client.post(
+            APPLICATION_ARCHITECTURES_PATH.removeprefix("/v1"),
+            json=_valid_payload(asset_id="Asset123", version="1.0.0"),
+        )
+
+    assert response.status_code == 404
+    assert response.headers["content-type"].startswith("application/problem+json")
+    assert response.json()["title"] == "Not Found"

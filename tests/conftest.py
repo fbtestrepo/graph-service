@@ -11,6 +11,31 @@ from pymongo import MongoClient
 from src.infrastructure.main import create_app
 
 
+API_V1_PREFIX = "/v1"
+HEALTH_PATH = "/health"
+DOCS_PATH = "/docs"
+REDOC_PATH = "/redoc"
+OPENAPI_PATH = "/openapi.json"
+
+
+def v1_path(path: str) -> str:
+    return f"{API_V1_PREFIX}{path}"
+
+
+COMPONENT_VALIDATE_PATH = v1_path("/components/validate")
+COMPONENTS_PATH = v1_path("/components")
+APPLICATION_ARCHITECTURES_PATH = v1_path("/application-architectures")
+MICRO_AFFINITY_GROUPS_PATH = v1_path("/micro-affinity-groups")
+
+
+def component_path(component_id: str) -> str:
+    return f"{COMPONENTS_PATH}/{component_id}"
+
+
+def component_dependencies_path(node_id: str) -> str:
+    return f"{COMPONENTS_PATH}/{node_id}/dependencies"
+
+
 @pytest.fixture(scope="session")
 def mongodb_replica_set_uri() -> Iterator[str]:
     """Session-scoped MongoDB replica-set URI for transaction-capable integration tests."""

@@ -8,6 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.infrastructure.main import create_app
+from tests.conftest import MICRO_AFFINITY_GROUPS_PATH
 
 
 def _application_architecture_payload(*, include_relationship: bool = True) -> dict[str, Any]:
@@ -184,7 +185,7 @@ def test_post_micro_affinity_groups_first_time_returns_201_and_processed_payload
 
     with client:
         request_payload = _valid_payload(include_name=True)
-        response = client.post("/micro-affinity-groups", json=request_payload)
+        response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=request_payload)
 
     assert response.status_code == 201
     assert response.json() == _expected_processed_payload(request_payload)
@@ -195,7 +196,7 @@ def test_post_micro_affinity_groups_accepts_omitted_name() -> None:
 
     with client:
         request_payload = _valid_payload(include_name=False)
-        response = client.post("/micro-affinity-groups", json=request_payload)
+        response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=request_payload)
 
     assert response.status_code == 201
     assert response.json() == _expected_processed_payload(request_payload)
@@ -205,7 +206,7 @@ def test_post_micro_affinity_groups_malformed_json_returns_400_problem_details()
     app = create_app()
     with TestClient(app) as client:
         response = client.post(
-            "/micro-affinity-groups",
+            MICRO_AFFINITY_GROUPS_PATH,
             data="{",
             headers={"content-type": "application/json"},
         )
@@ -255,7 +256,7 @@ def test_post_micro_affinity_groups_invalid_payloads_return_422_problem_details(
 
     with client:
         request_payload = payload_builder(_valid_payload())
-        response = client.post("/micro-affinity-groups", json=request_payload)
+        response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=request_payload)
 
     assert response.status_code == 422
     assert response.headers["content-type"].startswith("application/problem+json")
@@ -269,7 +270,7 @@ def test_post_micro_affinity_groups_missing_architecture_returns_422_problem_det
     client, repository, processed_repository = _configured_client(None)
 
     with client:
-        response = client.post("/micro-affinity-groups", json=_valid_payload())
+        response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload())
 
     assert response.status_code == 422
     assert response.headers["content-type"].startswith("application/problem+json")
@@ -284,7 +285,7 @@ def test_post_micro_affinity_groups_missing_source_service_returns_422_problem_d
     client, repository, processed_repository = _configured_client(architecture)
 
     with client:
-        response = client.post("/micro-affinity-groups", json=_valid_payload())
+        response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload())
 
     assert response.status_code == 422
     assert response.headers["content-type"].startswith("application/problem+json")
@@ -300,7 +301,7 @@ def test_post_micro_affinity_groups_unresolved_destination_returns_422_problem_d
     client, repository, processed_repository = _configured_client(architecture)
 
     with client:
-        response = client.post("/micro-affinity-groups", json=_valid_payload())
+        response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload())
 
     assert response.status_code == 422
     assert response.headers["content-type"].startswith("application/problem+json")
@@ -315,7 +316,7 @@ def test_post_micro_affinity_groups_processed_write_failure_returns_500() -> Non
     )
 
     with client:
-        response = client.post("/micro-affinity-groups", json=_valid_payload())
+        response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload())
 
     assert response.status_code == 500
     assert response.headers["content-type"].startswith("application/problem+json")
@@ -326,12 +327,12 @@ def test_post_micro_affinity_groups_second_time_returns_200_and_overwrites_paylo
 
     with client:
         first_payload = _valid_payload(include_name=True)
-        first_response = client.post("/micro-affinity-groups", json=first_payload)
+        first_response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=first_payload)
         assert first_response.status_code == 201
 
         second_payload = _valid_payload(include_name=False)
         second_payload["effective-date"] = "2025-02-01T10:00:00Z"
-        second_response = client.post("/micro-affinity-groups", json=second_payload)
+        second_response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=second_payload)
 
     assert second_response.status_code == 200
     assert second_response.json() == _expected_processed_payload(second_payload)
@@ -341,12 +342,23 @@ def test_post_micro_affinity_groups_different_environment_returns_201_and_coexis
     client, _, _ = _configured_client(_application_architecture_payload())
 
     with client:
-        first_response = client.post("/micro-affinity-groups", json=_valid_payload(include_name=True))
+        first_response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload(include_name=True))
         assert first_response.status_code == 201
 
         second_payload = _valid_payload(include_name=True)
         second_payload["environment"] = "staging"
-        second_response = client.post("/micro-affinity-groups", json=second_payload)
+        second_response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=second_payload)
 
     assert second_response.status_code == 201
     assert second_response.json() == _expected_processed_payload(second_payload)
+
+
+def test_root_micro_affinity_groups_path_is_not_supported() -> None:
+    client, _, _ = _configured_client(_application_architecture_payload())
+
+    with client:
+        response = client.post(MICRO_AFFINITY_GROUPS_PATH.removeprefix("/v1"), json=_valid_payload())
+
+    assert response.status_code == 404
+    assert response.headers["content-type"].startswith("application/problem+json")
+    assert response.json()["title"] == "Not Found"

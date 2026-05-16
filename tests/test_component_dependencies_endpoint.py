@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from src.core.domain.dependency_edge import DependencyEdge
 from src.infrastructure.main import create_app
+from tests.conftest import component_dependencies_path
 
 
 def _payload(*, node_id: str, relationships: list[dict[str, Any]] | None = None) -> dict[str, Any]:
@@ -143,7 +144,7 @@ def test_get_component_dependencies_returns_sample_shape_for_seeded_chain() -> N
         )
         repo.upsert("mAG_D", _payload(node_id="mAG_D", relationships=None))
 
-        response = client.get("/components/mAG_A/dependencies")
+        response = client.get(component_dependencies_path("mAG_A"))
 
     assert response.status_code == 200
 
@@ -161,7 +162,7 @@ def test_get_component_dependencies_missing_root_returns_404_problem_details() -
         repo = FakeComponentNodeRepository()
         client.app.state.component_node_repository = repo
 
-        response = client.get("/components/does-not-exist/dependencies")
+        response = client.get(component_dependencies_path("does-not-exist"))
 
     assert response.status_code == 404
     assert response.headers["content-type"].startswith("application/problem+json")
@@ -169,3 +170,13 @@ def test_get_component_dependencies_missing_root_returns_404_problem_details() -
     payload = response.json()
     assert payload["status"] == 404
     assert payload.get("error_code") == "component_not_found"
+
+
+def test_root_component_dependencies_path_is_not_supported() -> None:
+    app = create_app()
+    with TestClient(app) as client:
+        response = client.get(component_dependencies_path("mAG_A").removeprefix("/v1"))
+
+    assert response.status_code == 404
+    assert response.headers["content-type"].startswith("application/problem+json")
+    assert response.json()["title"] == "Not Found"

@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 
 from src.infrastructure.main import create_app
+from tests.conftest import COMPONENTS_PATH
 
 
 def test_post_components_persistence_failure_returns_500_problem_details(monkeypatch) -> None:
@@ -17,7 +18,7 @@ def test_post_components_persistence_failure_returns_500_problem_details(monkeyp
 
     with TestClient(app, raise_server_exceptions=False) as client:
         response = client.post(
-            "/components",
+            COMPONENTS_PATH,
             json={
                 "node-id": "node-1",
                 "node-type": "component",

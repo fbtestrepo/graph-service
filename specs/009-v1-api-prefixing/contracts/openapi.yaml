@@ -1,0 +1,99 @@
+openapi: 3.1.0
+info:
+  title: Dependency Graph Service API
+  version: v1-routing-plan
+  description: >-
+    Planning-time route catalog for the /v1 API prefixing feature. Payload schemas and status-code
+    semantics remain unchanged from the current implementation.
+paths:
+  /v1/components/validate:
+    post:
+      tags: [components]
+      summary: Validate component payload
+      responses:
+        '204':
+          description: Component payload is valid.
+        '400':
+          description: Malformed request body.
+        '422':
+          description: Schema validation failure.
+  /v1/components:
+    post:
+      tags: [components]
+      summary: Create or replace a component
+      responses:
+        '200':
+          description: Existing component replaced.
+        '201':
+          description: New component created.
+        '400':
+          description: Malformed request body.
+        '422':
+          description: Schema validation failure.
+        '500':
+          description: Persistence failure.
+  /v1/components/{component_id}:
+    get:
+      tags: [components]
+      summary: Get a component by identifier
+      parameters:
+        - in: path
+          name: component_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Component returned.
+        '404':
+          description: Component not found.
+  /v1/components/{node_id}/dependencies:
+    get:
+      tags: [components]
+      summary: Get dependency graph for a component node
+      parameters:
+        - in: path
+          name: node_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Dependency graph returned.
+        '404':
+          description: Root node not found.
+  /v1/application-architectures:
+    post:
+      tags: [application-architectures]
+      summary: Create or replace an application architecture document
+      responses:
+        '200':
+          description: Existing application architecture replaced.
+        '201':
+          description: New application architecture created.
+        '400':
+          description: Malformed request body.
+        '422':
+          description: Schema validation failure.
+  /v1/micro-affinity-groups:
+    post:
+      tags: [micro-affinity-groups]
+      summary: Create or replace a micro affinity group document
+      responses:
+        '200':
+          description: Existing micro affinity group replaced.
+        '201':
+          description: New micro affinity group created.
+        '400':
+          description: Malformed request body.
+        '422':
+          description: Validation or domain failure.
+        '500':
+          description: Infrastructure failure.
+  /health:
+    get:
+      tags: [health]
+      summary: Service health check
+      responses:
+        '200':
+          description: Service is healthy.
