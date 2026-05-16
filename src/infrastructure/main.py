@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 
 from src.adapters.inbound.api.routers.application_architectures import (
     router as application_architectures_router,
@@ -34,15 +34,17 @@ from src.infrastructure.errors.validation import register_validation_error_handl
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Dependency Graph Service")
+    v1_router = APIRouter(prefix="/v1")
 
     register_validation_error_handlers(app)
     register_exception_handlers(app)
 
     app.include_router(health_router)
-    app.include_router(component_validation_router)
-    app.include_router(components_router)
-    app.include_router(application_architectures_router)
-    app.include_router(micro_affinity_groups_router)
+    v1_router.include_router(component_validation_router)
+    v1_router.include_router(components_router)
+    v1_router.include_router(application_architectures_router)
+    v1_router.include_router(micro_affinity_groups_router)
+    app.include_router(v1_router)
 
     settings = load_settings()
     app.state.settings = settings

@@ -4,6 +4,8 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
+from tests.conftest import MICRO_AFFINITY_GROUPS_PATH
+
 
 def _application_architecture_payload(*, include_relationship: bool = True) -> dict[str, Any]:
     relationships: list[dict[str, Any]] = []
@@ -79,7 +81,7 @@ def test_post_micro_affinity_groups_creates_raw_and_processed_documents(app_with
         )
 
         architecture_collection.insert_one(_application_architecture_payload())
-        response = client.post("/micro-affinity-groups", json=_valid_payload())
+        response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload())
 
         assert response.status_code == 201
         assert raw_collection.count_documents({}) == 1
@@ -128,7 +130,7 @@ def test_post_micro_affinity_groups_zero_relationships_persists_empty_processed_
         )
 
         architecture_collection.insert_one(_application_architecture_payload(include_relationship=False))
-        response = client.post("/micro-affinity-groups", json=_valid_payload())
+        response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload())
 
         assert response.status_code == 201
         assert response.json()["relationships"] == []
@@ -160,14 +162,14 @@ def test_post_micro_affinity_groups_updates_existing_documents_and_returns_200(
 
         architecture_collection.insert_one(_application_architecture_payload())
 
-        first_response = client.post("/micro-affinity-groups", json=_valid_payload())
+        first_response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload())
         assert first_response.status_code == 201
 
         updated_payload = _valid_payload()
         updated_payload.pop("name")
         updated_payload["effective-date"] = "2025-02-01T10:00:00Z"
 
-        second_response = client.post("/micro-affinity-groups", json=updated_payload)
+        second_response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=updated_payload)
 
         assert second_response.status_code == 200
         assert raw_collection.count_documents({}) == 1
@@ -207,12 +209,12 @@ def test_post_micro_affinity_groups_different_keys_coexist(app_with_mongodb) -> 
 
         architecture_collection.insert_one(_application_architecture_payload())
 
-        first_response = client.post("/micro-affinity-groups", json=_valid_payload())
+        first_response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload())
         assert first_response.status_code == 201
 
         second_payload = _valid_payload()
         second_payload["environment"] = "staging"
-        second_response = client.post("/micro-affinity-groups", json=second_payload)
+        second_response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=second_payload)
 
         assert second_response.status_code == 201
 
@@ -253,7 +255,7 @@ def test_post_micro_affinity_groups_processed_write_failure_rolls_back_raw_and_p
         architecture_collection.insert_one(_application_architecture_payload())
         client.app.state.micro_affinity_group_processed_repository = FailingProcessedRepository()
 
-        response = client.post("/micro-affinity-groups", json=_valid_payload())
+        response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload())
 
         assert response.status_code == 500
         assert raw_collection.count_documents({}) == 0

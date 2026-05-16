@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
+from tests.conftest import COMPONENTS_PATH
+
 
 def _valid_payload(*, node_id: str, include_optional: bool = True) -> dict:
     payload: dict = {
@@ -32,7 +34,7 @@ def test_post_components_creates_document_and_returns_201(app_with_mongodb) -> N
         before_count = collection.count_documents({})
 
         request_payload = _valid_payload(node_id="node-1")
-        response = client.post("/components", json=request_payload)
+        response = client.post(COMPONENTS_PATH, json=request_payload)
 
         assert response.status_code == 201
         assert response.json() == request_payload
@@ -53,14 +55,14 @@ def test_post_components_updates_existing_document_and_returns_200(app_with_mong
         before_count = collection.count_documents({})
 
         first_payload = _valid_payload(node_id="node-1")
-        first_response = client.post("/components", json=first_payload)
+        first_response = client.post(COMPONENTS_PATH, json=first_payload)
         assert first_response.status_code == 201
 
         assert collection.count_documents({}) == before_count + 1
 
         second_payload = _valid_payload(node_id="node-1", include_optional=False)
         second_payload["node-name"] = "Updated Node"
-        second_response = client.post("/components", json=second_payload)
+        second_response = client.post(COMPONENTS_PATH, json=second_payload)
 
         assert second_response.status_code == 200
         assert second_response.json() == second_payload

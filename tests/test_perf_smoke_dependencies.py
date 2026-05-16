@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from src.core.domain.dependency_edge import DependencyEdge
 from src.infrastructure.main import create_app
+from tests.conftest import component_dependencies_path
 
 
 @dataclass(slots=True)
@@ -63,7 +64,7 @@ def test_dependencies_get_perf_smoke() -> None:
 
         for _i in range(100):
             start = time.perf_counter()
-            response = client.get(f"/components/{root}/dependencies")
+            response = client.get(component_dependencies_path(root))
             elapsed = time.perf_counter() - start
 
             if response.status_code == 200:

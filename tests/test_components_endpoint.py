@@ -7,6 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.infrastructure.main import create_app
+from tests.conftest import COMPONENTS_PATH, component_path
 
 
 def _valid_payload(*, node_id: str = "node-1", include_optional: bool = True) -> dict[str, Any]:
@@ -50,7 +51,7 @@ def test_post_components_first_time_returns_201_and_echoes_payload() -> None:
         client.app.state.component_node_repository = repo
 
         request_payload = _valid_payload(node_id="node-1")
-        response = client.post("/components", json=request_payload)
+        response = client.post(COMPONENTS_PATH, json=request_payload)
 
     assert response.status_code == 201
     assert response.json() == request_payload
@@ -63,17 +64,17 @@ def test_post_components_second_time_returns_200_and_replaces_payload() -> None:
         client.app.state.component_node_repository = repo
 
         first_payload = _valid_payload(node_id="node-1")
-        first_response = client.post("/components", json=first_payload)
+        first_response = client.post(COMPONENTS_PATH, json=first_payload)
         assert first_response.status_code == 201
 
         second_payload = _valid_payload(node_id="node-1", include_optional=False)
         second_payload["node-name"] = "Updated Node"
-        second_response = client.post("/components", json=second_payload)
+        second_response = client.post(COMPONENTS_PATH, json=second_payload)
 
         assert second_response.status_code == 200
         assert second_response.json() == second_payload
 
-        get_response = client.get("/components/node-1")
+        get_response = client.get(component_path("node-1"))
         assert get_response.status_code == 200
         assert get_response.json() == second_payload
 
@@ -84,7 +85,7 @@ def test_get_component_node_not_found_returns_404_problem_details() -> None:
         repo = FakeComponentNodeRepository()
         client.app.state.component_node_repository = repo
 
-        response = client.get("/components/missing")
+        response = client.get(component_path("missing"))
 
     assert response.status_code == 404
     assert response.headers["content-type"].startswith("application/problem+json")
@@ -97,7 +98,7 @@ def test_post_components_malformed_json_returns_400_problem_details() -> None:
     app = create_app()
     with TestClient(app) as client:
         response = client.post(
-            "/components",
+            COMPONENTS_PATH,
             data="{",
             headers={"content-type": "application/json"},
         )
@@ -113,7 +114,7 @@ def test_post_components_malformed_json_returns_400_problem_details() -> None:
 def test_post_components_missing_body_returns_422_problem_details() -> None:
     app = create_app()
     with TestClient(app) as client:
-        response = client.post("/components")
+        response = client.post(COMPONENTS_PATH)
 
     assert response.status_code == 422
     assert response.headers["content-type"].startswith("application/problem+json")
@@ -156,7 +157,7 @@ def test_post_components_invalid_payloads_return_422_problem_details(payload) ->
     with TestClient(app) as client:
         base = _valid_payload(node_id="node-1")
         request_payload = payload(base) if callable(payload) else payload
-        response = client.post("/components", json=request_payload)
+        response = client.post(COMPONENTS_PATH, json=request_payload)
 
     assert response.status_code == 422
     assert response.headers["content-type"].startswith("application/problem+json")
@@ -172,7 +173,21 @@ def test_post_components_minimal_payload_returns_success() -> None:
         client.app.state.component_node_repository = repo
 
         request_payload = _valid_payload(node_id="node-min", include_optional=False)
-        response = client.post("/components", json=request_payload)
+        response = client.post(COMPONENTS_PATH, json=request_payload)
 
     assert response.status_code == 201
     assert response.json() == request_payload
+
+
+def test_root_components_paths_are_not_supported() -> None:
+    app = create_app()
+    with TestClient(app) as client:
+        post_response = client.post(COMPONENTS_PATH.removeprefix("/v1"), json=_valid_payload())
+        get_response = client.get(component_path("node-1").removeprefix("/v1"))
+
+    assert post_response.status_code == 404
+    assert post_response.headers["content-type"].startswith("application/problem+json")
+    assert post_response.json()["title"] == "Not Found"
+    assert get_response.status_code == 404
+    assert get_response.headers["content-type"].startswith("application/problem+json")
+    assert get_response.json()["title"] == "Not Found"

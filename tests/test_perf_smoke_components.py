@@ -9,6 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.infrastructure.main import create_app
+from tests.conftest import COMPONENTS_PATH
 
 
 @dataclass(slots=True)
@@ -50,7 +51,7 @@ def test_components_upsert_perf_smoke() -> None:
             request_payload = _valid_payload(node_id=f"node-{i}")
 
             start = time.perf_counter()
-            response = client.post("/components", json=request_payload)
+            response = client.post(COMPONENTS_PATH, json=request_payload)
             elapsed = time.perf_counter() - start
 
             if response.status_code in (200, 201):

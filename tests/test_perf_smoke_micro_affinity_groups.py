@@ -9,6 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.infrastructure.main import create_app
+from tests.conftest import MICRO_AFFINITY_GROUPS_PATH
 
 
 def _application_architecture_payload() -> dict[str, Any]:
@@ -147,8 +148,9 @@ def test_micro_affinity_groups_upsert_perf_smoke() -> None:
 
         for index in range(100):
             start = time.perf_counter()
-            response = client.post("/micro-affinity-groups", json=_valid_payload(index))
+            response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload(index))
             elapsed = time.perf_counter() - start
+
 
             if response.status_code in (200, 201):
                 total_successes += 1

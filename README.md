@@ -20,6 +20,27 @@ pip install -e '.[dev]'
 uvicorn src.infrastructure.main:create_app --factory --reload --port 8000
 ```
 
+## HTTP Routes
+
+Business endpoints are published under the `/v1` prefix:
+
+- `POST /v1/components/validate`
+- `POST /v1/components`
+- `GET /v1/components/{component_id}`
+- `GET /v1/components/{node_id}/dependencies`
+- `POST /v1/application-architectures`
+- `POST /v1/micro-affinity-groups`
+
+Infrastructure and documentation routes remain at the root path:
+
+- `GET /health`
+- `GET /openapi.json`
+- `GET /docs`
+- `GET /redoc`
+
+Former root business paths such as `/components` and `/micro-affinity-groups` are no longer part
+of the supported route surface.
+
 ## Tests
 
 ```bash

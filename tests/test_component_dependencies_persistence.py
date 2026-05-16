@@ -4,6 +4,8 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
+from tests.conftest import COMPONENTS_PATH, component_dependencies_path
+
 
 def _node_payload(*, node_id: str, relationships: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     payload: dict[str, Any] = {
@@ -62,10 +64,10 @@ def test_get_component_dependencies_persistence_traverses_upstream_and_downstrea
                 ],
             ),
         ]:
-            resp = client.post("/components", json=payload)
+            resp = client.post(COMPONENTS_PATH, json=payload)
             assert resp.status_code in (200, 201)
 
-        response = client.get("/components/mAG_A/dependencies")
+        response = client.get(component_dependencies_path("mAG_A"))
 
     assert response.status_code == 200
     body = response.json()

@@ -3,13 +3,14 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 
 from src.infrastructure.main import create_app
+from tests.conftest import COMPONENT_VALIDATE_PATH
 
 
 def test_component_validate_success_returns_204() -> None:
     app = create_app()
     with TestClient(app) as client:
         response = client.post(
-            "/components/validate",
+            COMPONENT_VALIDATE_PATH,
             json={"component_id": "comp-1", "name": "Component"},
         )
 
@@ -21,7 +22,7 @@ def test_component_validate_malformed_json_returns_400_problem_details() -> None
     app = create_app()
     with TestClient(app) as client:
         response = client.post(
-            "/components/validate",
+            COMPONENT_VALIDATE_PATH,
             data="{",
             headers={"content-type": "application/json"},
         )
@@ -38,7 +39,7 @@ def test_component_validate_schema_violation_returns_422_problem_details() -> No
     app = create_app()
     with TestClient(app) as client:
         response = client.post(
-            "/components/validate",
+            COMPONENT_VALIDATE_PATH,
             json={"component_id": "", "name": "Component"},
         )
 
@@ -48,3 +49,16 @@ def test_component_validate_schema_violation_returns_422_problem_details() -> No
     payload = response.json()
     assert payload["status"] == 422
     assert payload["title"] == "Validation Error"
+
+
+def test_root_component_validate_path_is_not_supported() -> None:
+    app = create_app()
+    with TestClient(app) as client:
+        response = client.post(
+            "/components/validate",
+            json={"component_id": "comp-1", "name": "Component"},
+        )
+
+    assert response.status_code == 404
+    assert response.headers["content-type"].startswith("application/problem+json")
+    assert response.json()["title"] == "Not Found"
