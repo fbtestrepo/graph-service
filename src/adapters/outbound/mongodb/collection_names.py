@@ -1,0 +1,6 @@
+APPLICATION_ARCHITECTURES_COLLECTION = "application_architectures"
+MICRO_AFFINITY_GROUPS_COLLECTION = "micro_affinity_groups"
+MICRO_AFFINITY_GROUPS_PROCESSED_COLLECTION = "micro_affinity_groups_processed"
+
+COMPONENTS_COLLECTION = "components"
+COMPONENT_PAYLOAD_RECORDS_COLLECTION = "component_payload_records"

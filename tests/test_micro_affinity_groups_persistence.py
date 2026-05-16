@@ -4,6 +4,11 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
+from src.adapters.outbound.mongodb.collection_names import (
+    APPLICATION_ARCHITECTURES_COLLECTION,
+    MICRO_AFFINITY_GROUPS_COLLECTION,
+    MICRO_AFFINITY_GROUPS_PROCESSED_COLLECTION,
+)
 from tests.conftest import MICRO_AFFINITY_GROUPS_PATH
 
 
@@ -74,10 +79,12 @@ def test_post_micro_affinity_groups_creates_raw_and_processed_documents(app_with
     app = app_with_mongodb
 
     with TestClient(app, raise_server_exceptions=False) as client:
-        architecture_collection = client.app.state.mongo_db.get_collection("application-architectures")
-        raw_collection = client.app.state.mongo_db.get_collection("micro-affinity-groups")
+        architecture_collection = client.app.state.mongo_db.get_collection(
+            APPLICATION_ARCHITECTURES_COLLECTION
+        )
+        raw_collection = client.app.state.mongo_db.get_collection(MICRO_AFFINITY_GROUPS_COLLECTION)
         processed_collection = client.app.state.mongo_db.get_collection(
-            "micro-affinity-groups-processed"
+            MICRO_AFFINITY_GROUPS_PROCESSED_COLLECTION
         )
 
         architecture_collection.insert_one(_application_architecture_payload())
@@ -124,9 +131,11 @@ def test_post_micro_affinity_groups_zero_relationships_persists_empty_processed_
     app = app_with_mongodb
 
     with TestClient(app) as client:
-        architecture_collection = client.app.state.mongo_db.get_collection("application-architectures")
+        architecture_collection = client.app.state.mongo_db.get_collection(
+            APPLICATION_ARCHITECTURES_COLLECTION
+        )
         processed_collection = client.app.state.mongo_db.get_collection(
-            "micro-affinity-groups-processed"
+            MICRO_AFFINITY_GROUPS_PROCESSED_COLLECTION
         )
 
         architecture_collection.insert_one(_application_architecture_payload(include_relationship=False))
@@ -154,10 +163,12 @@ def test_post_micro_affinity_groups_updates_existing_documents_and_returns_200(
     app = app_with_mongodb
 
     with TestClient(app, raise_server_exceptions=False) as client:
-        architecture_collection = client.app.state.mongo_db.get_collection("application-architectures")
-        raw_collection = client.app.state.mongo_db.get_collection("micro-affinity-groups")
+        architecture_collection = client.app.state.mongo_db.get_collection(
+            APPLICATION_ARCHITECTURES_COLLECTION
+        )
+        raw_collection = client.app.state.mongo_db.get_collection(MICRO_AFFINITY_GROUPS_COLLECTION)
         processed_collection = client.app.state.mongo_db.get_collection(
-            "micro-affinity-groups-processed"
+            MICRO_AFFINITY_GROUPS_PROCESSED_COLLECTION
         )
 
         architecture_collection.insert_one(_application_architecture_payload())
@@ -202,9 +213,11 @@ def test_post_micro_affinity_groups_different_keys_coexist(app_with_mongodb) -> 
     app = app_with_mongodb
 
     with TestClient(app) as client:
-        architecture_collection = client.app.state.mongo_db.get_collection("application-architectures")
+        architecture_collection = client.app.state.mongo_db.get_collection(
+            APPLICATION_ARCHITECTURES_COLLECTION
+        )
         processed_collection = client.app.state.mongo_db.get_collection(
-            "micro-affinity-groups-processed"
+            MICRO_AFFINITY_GROUPS_PROCESSED_COLLECTION
         )
 
         architecture_collection.insert_one(_application_architecture_payload())
@@ -246,10 +259,12 @@ def test_post_micro_affinity_groups_processed_write_failure_rolls_back_raw_and_p
             raise RuntimeError("processed write failed")
 
     with TestClient(app, raise_server_exceptions=False) as client:
-        architecture_collection = client.app.state.mongo_db.get_collection("application-architectures")
-        raw_collection = client.app.state.mongo_db.get_collection("micro-affinity-groups")
+        architecture_collection = client.app.state.mongo_db.get_collection(
+            APPLICATION_ARCHITECTURES_COLLECTION
+        )
+        raw_collection = client.app.state.mongo_db.get_collection(MICRO_AFFINITY_GROUPS_COLLECTION)
         processed_collection = client.app.state.mongo_db.get_collection(
-            "micro-affinity-groups-processed"
+            MICRO_AFFINITY_GROUPS_PROCESSED_COLLECTION
         )
 
         architecture_collection.insert_one(_application_architecture_payload())
