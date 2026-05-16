@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from pymongo.database import Database
 
+from src.adapters.outbound.mongodb.collection_names import (
+    APPLICATION_ARCHITECTURES_COLLECTION,
+)
 from src.core.ports.application_architecture_repository import (
     ApplicationArchitecturePayload,
     ApplicationArchitectureRepository,
@@ -19,7 +22,7 @@ class MongoApplicationArchitectureRepository(ApplicationArchitectureRepository):
         payload: ApplicationArchitecturePayload,
         session: object | None = None,
     ) -> bool:
-        collection = self._db.get_collection("application-architectures")
+        collection = self._db.get_collection(APPLICATION_ARCHITECTURES_COLLECTION)
         document_filter = {"metadata.AssetID": asset_id, "metadata.version": version}
 
         existing = collection.find_one(
@@ -47,7 +50,7 @@ class MongoApplicationArchitectureRepository(ApplicationArchitectureRepository):
         version: str,
         session: object | None = None,
     ) -> ApplicationArchitecturePayload | None:
-        document = self._db.get_collection("application-architectures").find_one(
+        document = self._db.get_collection(APPLICATION_ARCHITECTURES_COLLECTION).find_one(
             {"metadata.AssetID": asset_id, "metadata.version": version},
             session=session,
         )

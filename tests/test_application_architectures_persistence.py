@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
+from src.adapters.outbound.mongodb.collection_names import (
+    APPLICATION_ARCHITECTURES_COLLECTION,
+)
 from tests.conftest import APPLICATION_ARCHITECTURES_PATH
 
 
@@ -24,7 +27,7 @@ def test_post_application_architectures_creates_document_and_returns_201(app_wit
     app = app_with_mongodb
 
     with TestClient(app) as client:
-        collection = client.app.state.mongo_db.get_collection("application-architectures")
+        collection = client.app.state.mongo_db.get_collection(APPLICATION_ARCHITECTURES_COLLECTION)
         before_count = collection.count_documents({})
 
         request_payload = _valid_payload(asset_id="Asset123", version="1.0.0")
@@ -50,7 +53,7 @@ def test_post_application_architectures_updates_existing_document_and_returns_20
     app = app_with_mongodb
 
     with TestClient(app) as client:
-        collection = client.app.state.mongo_db.get_collection("application-architectures")
+        collection = client.app.state.mongo_db.get_collection(APPLICATION_ARCHITECTURES_COLLECTION)
         before_count = collection.count_documents({})
 
         first_payload = _valid_payload(asset_id="Asset123", version="1.0.0")
@@ -94,7 +97,7 @@ def test_post_application_architectures_different_versions_coexist(app_with_mong
     app = app_with_mongodb
 
     with TestClient(app) as client:
-        collection = client.app.state.mongo_db.get_collection("application-architectures")
+        collection = client.app.state.mongo_db.get_collection(APPLICATION_ARCHITECTURES_COLLECTION)
 
         first_response = client.post(
             APPLICATION_ARCHITECTURES_PATH,
