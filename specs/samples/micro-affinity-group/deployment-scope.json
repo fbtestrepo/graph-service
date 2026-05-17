@@ -1,0 +1,59 @@
+{
+  "micro_ag_id": "C",
+  "environment": "preproduction",
+  "effective_date": "2025-01-01T14:00:00Z",
+  "graph_has_cycles": true,
+  "dependency_graph": [
+    {
+      "source_micro_ag_id": "B",
+      "destination_micro_ag_id": "C"
+    },
+    {
+      "source_micro_ag_id": "C",
+      "destination_micro_ag_id": "D"
+    },
+    {
+      "source_micro_ag_id": "D",
+      "destination_micro_ag_id": "E"
+    },
+    {
+      "source_micro_ag_id": "E",
+      "destination_micro_ag_id": "A"
+    },
+    {
+      "source_micro_ag_id": "A",
+      "destination_micro_ag_id": "B",
+      "is_cyclic": true
+    }
+  ],
+  "deployment_sequence": {
+    "bypassed_edges": [
+      {
+        "source_micro_ag_id": "A",
+        "destination_micro_ag_id": "B"
+      }
+    ],
+    "steps": [
+      {
+        "step_index": 1,
+        "micro_ag_ids": ["A"]
+      },
+      {
+        "step_index": 2,
+        "micro_ag_ids": ["E"]
+      },
+      {
+        "step_index": 3,
+        "micro_ag_ids": ["D"]
+      },
+      {
+        "step_index": 4,
+        "micro_ag_ids": ["C"]
+      },
+      {
+        "step_index": 5,
+        "micro_ag_ids": ["B"]
+      }
+    ]
+  }
+}
