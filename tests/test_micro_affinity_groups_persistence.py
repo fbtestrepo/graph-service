@@ -58,12 +58,21 @@ def _application_architecture_payload(*, include_relationship: bool = True) -> d
     }
 
 
-def _valid_payload() -> dict[str, Any]:
-    return {
+def _application_architecture_payload_for_version(version: str) -> dict[str, Any]:
+    payload = _application_architecture_payload()
+    payload["metadata"]["version"] = version
+    return payload
+
+
+def _valid_payload(
+    *,
+    architecture_version: str = "1.0.0",
+    include_name: bool = True,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
         "micro_ag_id": "mAG_A",
-        "name": "Micro Affinity Group A",
         "parent_asset_id": "ba0270",
-        "architecture_version": "1.0.0",
+        "architecture_version": architecture_version,
         "environment": "production",
         "effective_date": "2025-01-01T14:00:00Z",
         "workloads": [
@@ -73,6 +82,9 @@ def _valid_payload() -> dict[str, Any]:
             }
         ],
     }
+    if include_name:
+        payload["name"] = "Micro Affinity Group A"
+    return payload
 
 
 def test_post_micro_affinity_groups_creates_raw_and_processed_documents(app_with_mongodb) -> None:
@@ -98,14 +110,12 @@ def test_post_micro_affinity_groups_creates_raw_and_processed_documents(app_with
             {
                 "micro_ag_id": "mAG_A",
                 "environment": "production",
-                "architecture_version": "1.0.0",
             }
         )
         processed_record = processed_collection.find_one(
             {
                 "micro_ag_id": "mAG_A",
                 "environment": "production",
-                "architecture_version": "1.0.0",
             }
         )
 
@@ -148,7 +158,6 @@ def test_post_micro_affinity_groups_zero_relationships_persists_empty_processed_
             {
                 "micro_ag_id": "mAG_A",
                 "environment": "production",
-                "architecture_version": "1.0.0",
             }
         )
 
@@ -157,7 +166,7 @@ def test_post_micro_affinity_groups_zero_relationships_persists_empty_processed_
     assert processed_record["relationships"] == []
 
 
-def test_post_micro_affinity_groups_updates_existing_documents_and_returns_200(
+def test_post_micro_affinity_groups_updates_existing_pair_with_new_version_and_returns_200(
     app_with_mongodb,
 ) -> None:
     app = app_with_mongodb
@@ -171,13 +180,17 @@ def test_post_micro_affinity_groups_updates_existing_documents_and_returns_200(
             MICRO_AFFINITY_GROUPS_PROCESSED_COLLECTION
         )
 
-        architecture_collection.insert_one(_application_architecture_payload())
+        architecture_collection.insert_many(
+            [
+                _application_architecture_payload_for_version("1.0.0"),
+                _application_architecture_payload_for_version("2.0.0"),
+            ]
+        )
 
         first_response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload())
         assert first_response.status_code == 201
 
-        updated_payload = _valid_payload()
-        updated_payload.pop("name")
+        updated_payload = _valid_payload(architecture_version="2.0.0", include_name=False)
         updated_payload["effective_date"] = "2025-02-01T10:00:00Z"
 
         second_response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=updated_payload)
@@ -190,14 +203,12 @@ def test_post_micro_affinity_groups_updates_existing_documents_and_returns_200(
             {
                 "micro_ag_id": "mAG_A",
                 "environment": "production",
-                "architecture_version": "1.0.0",
             }
         )
         processed_record = processed_collection.find_one(
             {
                 "micro_ag_id": "mAG_A",
                 "environment": "production",
-                "architecture_version": "1.0.0",
             }
         )
 
@@ -206,7 +217,9 @@ def test_post_micro_affinity_groups_updates_existing_documents_and_returns_200(
     raw_record.pop("_id", None)
     processed_record.pop("_id", None)
     assert raw_record == updated_payload
+    assert processed_record["architecture_version"] == "2.0.0"
     assert processed_record["effective_date"] == "2025-02-01T10:00:00Z"
+    assert "name" not in processed_record
 
 
 def test_post_micro_affinity_groups_different_keys_coexist(app_with_mongodb) -> None:
@@ -248,11 +261,18 @@ def test_post_micro_affinity_groups_processed_write_failure_rolls_back_raw_and_p
     app = app_with_mongodb
 
     class FailingProcessedRepository:
+        def count_by_identity(
+            self,
+            micro_ag_id: str,
+            environment: str,
+            session: object | None = None,
+        ) -> int:
+            return 0
+
         def upsert(
             self,
             micro_ag_id: str,
             environment: str,
-            architecture_version: str,
             payload: dict[str, Any],
             session: object | None = None,
         ) -> bool:
@@ -275,3 +295,78 @@ def test_post_micro_affinity_groups_processed_write_failure_rolls_back_raw_and_p
         assert response.status_code == 500
         assert raw_collection.count_documents({}) == 0
         assert processed_collection.count_documents({}) == 0
+
+
+def test_post_micro_affinity_groups_duplicate_raw_pair_returns_409_without_modification(
+    app_with_mongodb,
+) -> None:
+    app = app_with_mongodb
+
+    with TestClient(app, raise_server_exceptions=False) as client:
+        architecture_collection = client.app.state.mongo_db.get_collection(
+            APPLICATION_ARCHITECTURES_COLLECTION
+        )
+        raw_collection = client.app.state.mongo_db.get_collection(MICRO_AFFINITY_GROUPS_COLLECTION)
+        processed_collection = client.app.state.mongo_db.get_collection(
+            MICRO_AFFINITY_GROUPS_PROCESSED_COLLECTION
+        )
+
+        architecture_collection.insert_one(_application_architecture_payload_for_version("2.0.0"))
+        raw_collection.insert_many(
+            [
+                _valid_payload(architecture_version="1.0.0"),
+                _valid_payload(architecture_version="9.9.9"),
+            ]
+        )
+
+        response = client.post(
+            MICRO_AFFINITY_GROUPS_PATH,
+            json=_valid_payload(architecture_version="2.0.0"),
+        )
+
+        assert response.status_code == 409
+        assert response.headers["content-type"].startswith("application/problem+json")
+        assert response.json()["error_code"] == "duplicate_micro_affinity_group_identity"
+        assert raw_collection.count_documents({"micro_ag_id": "mAG_A", "environment": "production"}) == 2
+        assert processed_collection.count_documents({"micro_ag_id": "mAG_A", "environment": "production"}) == 0
+
+
+def test_post_micro_affinity_groups_partial_existing_pair_is_repaired_with_200(
+    app_with_mongodb,
+) -> None:
+    app = app_with_mongodb
+
+    with TestClient(app, raise_server_exceptions=False) as client:
+        architecture_collection = client.app.state.mongo_db.get_collection(
+            APPLICATION_ARCHITECTURES_COLLECTION
+        )
+        raw_collection = client.app.state.mongo_db.get_collection(MICRO_AFFINITY_GROUPS_COLLECTION)
+        processed_collection = client.app.state.mongo_db.get_collection(
+            MICRO_AFFINITY_GROUPS_PROCESSED_COLLECTION
+        )
+
+        architecture_collection.insert_one(_application_architecture_payload_for_version("2.0.0"))
+        raw_collection.insert_one(_valid_payload(architecture_version="1.0.0"))
+
+        replacement_payload = _valid_payload(architecture_version="2.0.0", include_name=False)
+        replacement_payload["effective_date"] = "2025-02-01T10:00:00Z"
+        response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=replacement_payload)
+
+        assert response.status_code == 200
+        assert raw_collection.count_documents({"micro_ag_id": "mAG_A", "environment": "production"}) == 1
+        assert processed_collection.count_documents({"micro_ag_id": "mAG_A", "environment": "production"}) == 1
+
+        raw_record = raw_collection.find_one(
+            {"micro_ag_id": "mAG_A", "environment": "production"},
+            projection={"_id": False},
+        )
+        processed_record = processed_collection.find_one(
+            {"micro_ag_id": "mAG_A", "environment": "production"},
+            projection={"_id": False},
+        )
+
+    assert raw_record == replacement_payload
+    assert processed_record is not None
+    assert processed_record["architecture_version"] == "2.0.0"
+    assert processed_record["effective_date"] == "2025-02-01T10:00:00Z"
+    assert "name" not in raw_record

@@ -9,6 +9,9 @@ from src.core.domain.micro_affinity_group_relationship_mapper import (
     MicroAffinityGroupRelationshipMapper,
 )
 from src.core.exceptions.application_architecture_not_found import ApplicationArchitectureNotFound
+from src.core.exceptions.duplicate_micro_affinity_group_identity import (
+    DuplicateMicroAffinityGroupIdentity,
+)
 from src.core.exceptions.micro_affinity_group_relationship_resolution_error import (
     MicroAffinityGroupRelationshipResolutionError,
 )
@@ -93,17 +96,26 @@ class FakeApplicationArchitectureRepository:
 
 @dataclass(slots=True)
 class FakeMicroAffinityGroupRepository:
-    store: dict[tuple[str, str, str], dict[str, Any]] = field(default_factory=dict)
+    store: dict[tuple[str, str], dict[str, Any]] = field(default_factory=dict)
+    duplicate_counts: dict[tuple[str, str], int] = field(default_factory=dict)
+
+    def count_by_identity(
+        self,
+        micro_ag_id: str,
+        environment: str,
+        session: Any | None = None,
+    ) -> int:
+        key = (micro_ag_id, environment)
+        return self.duplicate_counts.get(key, 1 if key in self.store else 0)
 
     def upsert(
         self,
         micro_ag_id: str,
         environment: str,
-        architecture_version: str,
         payload: dict[str, Any],
         session: Any | None = None,
     ) -> bool:
-        key = (micro_ag_id, environment, architecture_version)
+        key = (micro_ag_id, environment)
         created = key not in self.store
         self.store[key] = payload
         return created
@@ -111,17 +123,26 @@ class FakeMicroAffinityGroupRepository:
 
 @dataclass(slots=True)
 class FakeMicroAffinityGroupProcessedRepository:
-    store: dict[tuple[str, str, str], dict[str, Any]] = field(default_factory=dict)
+    store: dict[tuple[str, str], dict[str, Any]] = field(default_factory=dict)
+    duplicate_counts: dict[tuple[str, str], int] = field(default_factory=dict)
+
+    def count_by_identity(
+        self,
+        micro_ag_id: str,
+        environment: str,
+        session: Any | None = None,
+    ) -> int:
+        key = (micro_ag_id, environment)
+        return self.duplicate_counts.get(key, 1 if key in self.store else 0)
 
     def upsert(
         self,
         micro_ag_id: str,
         environment: str,
-        architecture_version: str,
         payload: dict[str, Any],
         session: Any | None = None,
     ) -> bool:
-        key = (micro_ag_id, environment, architecture_version)
+        key = (micro_ag_id, environment)
         created = key not in self.store
         self.store[key] = payload
         return created
@@ -135,6 +156,8 @@ class FakeTransactionManager:
 
 def _build_use_case(
     architecture: dict[str, Any] | None,
+    *,
+    additional_architectures: dict[tuple[str, str], dict[str, Any]] | None = None,
 ) -> tuple[
     UpsertMicroAffinityGroup,
     FakeMicroAffinityGroupRepository,
@@ -145,6 +168,8 @@ def _build_use_case(
     store: dict[tuple[str, str], dict[str, Any]] = {}
     if architecture is not None:
         store[("ba0270", "1.0.0")] = architecture
+    if additional_architectures is not None:
+        store.update(additional_architectures)
 
     use_case = UpsertMicroAffinityGroup(
         application_architecture_repository=FakeApplicationArchitectureRepository(store=store),
@@ -204,8 +229,8 @@ def test_upsert_micro_affinity_group_returns_processed_payload() -> None:
             }
         ],
     }
-    assert raw_repository.store[("mAG_A", "production", "1.0.0")] == _valid_payload()
-    assert processed_repository.store[("mAG_A", "production", "1.0.0")] == result.payload
+    assert raw_repository.store[("mAG_A", "production")] == _valid_payload()
+    assert processed_repository.store[("mAG_A", "production")] == result.payload
 
 
 def test_upsert_micro_affinity_group_keeps_zero_relationships_non_fatal() -> None:
@@ -216,4 +241,35 @@ def test_upsert_micro_affinity_group_keeps_zero_relationships_non_fatal() -> Non
     result = use_case.execute(_valid_payload())
 
     assert result.payload["relationships"] == []
-    assert processed_repository.store[("mAG_A", "production", "1.0.0")]["relationships"] == []
+    assert processed_repository.store[("mAG_A", "production")]["relationships"] == []
+
+
+def test_upsert_micro_affinity_group_same_pair_new_version_replaces_existing_pair() -> None:
+    use_case, raw_repository, processed_repository = _build_use_case(
+        _application_architecture_payload(),
+        additional_architectures={("ba0270", "2.0.0"): _application_architecture_payload()},
+    )
+
+    first_result = use_case.execute(_valid_payload())
+    assert first_result.created is True
+
+    replacement_payload = _valid_payload()
+    replacement_payload["architecture_version"] = "2.0.0"
+    replacement_payload["effective_date"] = "2025-02-01T10:00:00Z"
+    replacement_payload.pop("name")
+
+    second_result = use_case.execute(replacement_payload)
+
+    assert second_result.created is False
+    assert raw_repository.store[("mAG_A", "production")] == replacement_payload
+    assert processed_repository.store[("mAG_A", "production")]["architecture_version"] == "2.0.0"
+    assert "name" not in raw_repository.store[("mAG_A", "production")]
+    assert "name" not in processed_repository.store[("mAG_A", "production")]
+
+
+def test_upsert_micro_affinity_group_duplicate_existing_pair_raises_conflict() -> None:
+    use_case, raw_repository, _ = _build_use_case(_application_architecture_payload())
+    raw_repository.duplicate_counts[("mAG_A", "production")] = 2
+
+    with pytest.raises(DuplicateMicroAffinityGroupIdentity):
+        use_case.execute(_valid_payload())

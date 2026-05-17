@@ -13,6 +13,9 @@ from src.core.exceptions.authorization_denied import AuthorizationDenied
 from src.core.exceptions.circular_dependency_detected import CircularDependencyDetected
 from src.core.exceptions.component_not_found import ComponentNotFound
 from src.core.exceptions.duplicate_dependency_edge import DuplicateDependencyEdge
+from src.core.exceptions.duplicate_micro_affinity_group_identity import (
+    DuplicateMicroAffinityGroupIdentity,
+)
 from src.core.exceptions.micro_affinity_group_workload_mismatch import (
     MicroAffinityGroupWorkloadMismatch,
 )
@@ -68,6 +71,7 @@ def unhandled_exception_handler(_request: Request, _exc: Exception) -> JSONRespo
 def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(ComponentNotFound, cast(object, domain_exception_handler))
     app.add_exception_handler(DuplicateDependencyEdge, cast(object, domain_exception_handler))
+    app.add_exception_handler(DuplicateMicroAffinityGroupIdentity, cast(object, domain_exception_handler))
     app.add_exception_handler(CircularDependencyDetected, cast(object, domain_exception_handler))
     app.add_exception_handler(AuthenticationFailed, cast(object, domain_exception_handler))
     app.add_exception_handler(AuthorizationDenied, cast(object, domain_exception_handler))
