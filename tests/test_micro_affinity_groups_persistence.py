@@ -60,16 +60,16 @@ def _application_architecture_payload(*, include_relationship: bool = True) -> d
 
 def _valid_payload() -> dict[str, Any]:
     return {
-        "micro-ag-id": "mAG_A",
+        "micro_ag_id": "mAG_A",
         "name": "Micro Affinity Group A",
-        "parent-asset-id": "ba0270",
-        "architecture-version": "1.0.0",
+        "parent_asset_id": "ba0270",
+        "architecture_version": "1.0.0",
         "environment": "production",
-        "effective-date": "2025-01-01T14:00:00Z",
+        "effective_date": "2025-01-01T14:00:00Z",
         "workloads": [
             {
                 "id": "AIMC/repos/rw-orchestrator-svc_ba0116_pq0177",
-                "asset-id": "pq0177",
+                "asset_id": "pq0177",
             }
         ],
     }
@@ -96,16 +96,16 @@ def test_post_micro_affinity_groups_creates_raw_and_processed_documents(app_with
 
         raw_record = raw_collection.find_one(
             {
-                "micro-ag-id": "mAG_A",
+                "micro_ag_id": "mAG_A",
                 "environment": "production",
-                "architecture-version": "1.0.0",
+                "architecture_version": "1.0.0",
             }
         )
         processed_record = processed_collection.find_one(
             {
-                "micro-ag-id": "mAG_A",
+                "micro_ag_id": "mAG_A",
                 "environment": "production",
-                "architecture-version": "1.0.0",
+                "architecture_version": "1.0.0",
             }
         )
 
@@ -116,10 +116,10 @@ def test_post_micro_affinity_groups_creates_raw_and_processed_documents(app_with
     assert raw_record == _valid_payload()
     assert processed_record["relationships"] == [
         {
-            "source-workload": _valid_payload()["workloads"][0],
-            "destination-workload": {
+            "source_workload": _valid_payload()["workloads"][0],
+            "destination_workload": {
                 "id": "AIMC/repos/rw-cap-svc_ba0116_dh6980",
-                "asset-id": "dh6980",
+                "asset_id": "dh6980",
             },
         }
     ]
@@ -146,9 +146,9 @@ def test_post_micro_affinity_groups_zero_relationships_persists_empty_processed_
 
         processed_record = processed_collection.find_one(
             {
-                "micro-ag-id": "mAG_A",
+                "micro_ag_id": "mAG_A",
                 "environment": "production",
-                "architecture-version": "1.0.0",
+                "architecture_version": "1.0.0",
             }
         )
 
@@ -178,7 +178,7 @@ def test_post_micro_affinity_groups_updates_existing_documents_and_returns_200(
 
         updated_payload = _valid_payload()
         updated_payload.pop("name")
-        updated_payload["effective-date"] = "2025-02-01T10:00:00Z"
+        updated_payload["effective_date"] = "2025-02-01T10:00:00Z"
 
         second_response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=updated_payload)
 
@@ -188,16 +188,16 @@ def test_post_micro_affinity_groups_updates_existing_documents_and_returns_200(
 
         raw_record = raw_collection.find_one(
             {
-                "micro-ag-id": "mAG_A",
+                "micro_ag_id": "mAG_A",
                 "environment": "production",
-                "architecture-version": "1.0.0",
+                "architecture_version": "1.0.0",
             }
         )
         processed_record = processed_collection.find_one(
             {
-                "micro-ag-id": "mAG_A",
+                "micro_ag_id": "mAG_A",
                 "environment": "production",
-                "architecture-version": "1.0.0",
+                "architecture_version": "1.0.0",
             }
         )
 
@@ -206,7 +206,7 @@ def test_post_micro_affinity_groups_updates_existing_documents_and_returns_200(
     raw_record.pop("_id", None)
     processed_record.pop("_id", None)
     assert raw_record == updated_payload
-    assert processed_record["effective-date"] == "2025-02-01T10:00:00Z"
+    assert processed_record["effective_date"] == "2025-02-01T10:00:00Z"
 
 
 def test_post_micro_affinity_groups_different_keys_coexist(app_with_mongodb) -> None:
@@ -233,7 +233,7 @@ def test_post_micro_affinity_groups_different_keys_coexist(app_with_mongodb) -> 
 
         records = list(
             processed_collection.find(
-                {"micro-ag-id": "mAG_A"},
+                {"micro_ag_id": "mAG_A"},
                 projection={"_id": False},
             )
         )

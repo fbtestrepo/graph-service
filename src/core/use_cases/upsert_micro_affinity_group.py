@@ -32,10 +32,10 @@ class UpsertMicroAffinityGroup:
     relationship_mapper: MicroAffinityGroupRelationshipMapper
 
     def execute(self, payload: dict[str, Any]) -> UpsertMicroAffinityGroupResult:
-        asset_id = str(payload["parent-asset-id"])
-        architecture_version = str(payload["architecture-version"])
+        asset_id = str(payload["parent_asset_id"])
+        architecture_version = str(payload["architecture_version"])
         environment = str(payload["environment"])
-        micro_ag_id = str(payload["micro-ag-id"])
+        micro_ag_id = str(payload["micro_ag_id"])
 
         def _operation(session: object) -> UpsertMicroAffinityGroupResult:
             self.micro_affinity_group_repository.upsert(

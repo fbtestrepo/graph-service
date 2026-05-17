@@ -5,32 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "micro-ag-id",
-    "parent-asset-id",
-    "architecture-version",
+    "micro_ag_id",
+    "parent_asset_id",
+    "architecture_version",
     "environment",
-    "effective-date",
+    "effective_date",
     "workloads",
     "relationships"
   ],
   "properties": {
-    "micro-ag-id": {
+    "micro_ag_id": {
       "type": "string"
     },
     "name": {
       "type": "string"
     },
-    "parent-asset-id": {
+    "parent_asset_id": {
       "type": "string"
     },
-    "architecture-version": {
+    "architecture_version": {
       "type": "string",
       "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
     },
     "environment": {
       "type": "string"
     },
-    "effective-date": {
+    "effective_date": {
       "type": "string",
       "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
     },
@@ -54,13 +54,13 @@
       "additionalProperties": false,
       "required": [
         "id",
-        "asset-id"
+        "asset_id"
       ],
       "properties": {
         "id": {
           "type": "string"
         },
-        "asset-id": {
+        "asset_id": {
           "type": "string"
         }
       }
@@ -69,14 +69,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "source-workload",
-        "destination-workload"
+        "source_workload",
+        "destination_workload"
       ],
       "properties": {
-        "source-workload": {
+        "source_workload": {
           "$ref": "#/$defs/workload"
         },
-        "destination-workload": {
+        "destination_workload": {
           "$ref": "#/$defs/workload"
         }
       }

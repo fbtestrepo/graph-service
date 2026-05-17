@@ -59,15 +59,15 @@ def _application_architecture_payload(*, include_relationship: bool = True) -> d
 
 def _valid_payload(*, include_name: bool = True) -> dict[str, Any]:
     payload: dict[str, Any] = {
-        "micro-ag-id": "mAG_A",
-        "parent-asset-id": "ba0270",
-        "architecture-version": "1.0.0",
+        "micro_ag_id": "mAG_A",
+        "parent_asset_id": "ba0270",
+        "architecture_version": "1.0.0",
         "environment": "production",
-        "effective-date": "2025-01-01T14:00:00Z",
+        "effective_date": "2025-01-01T14:00:00Z",
         "workloads": [
             {
                 "id": "AIMC/repos/rw-orchestrator-svc_ba0116_pq0177",
-                "asset-id": "pq0177",
+                "asset_id": "pq0177",
             }
         ],
     }
@@ -81,13 +81,30 @@ def _expected_processed_payload(request_payload: dict[str, Any]) -> dict[str, An
         **request_payload,
         "relationships": [
             {
-                "source-workload": request_payload["workloads"][0],
-                "destination-workload": {
+                "source_workload": request_payload["workloads"][0],
+                "destination_workload": {
                     "id": "AIMC/repos/rw-cap-svc_ba0116_dh6980",
-                    "asset-id": "dh6980",
+                    "asset_id": "dh6980",
                 },
             }
         ],
+    }
+
+
+def _legacy_kebab_case_payload() -> dict[str, Any]:
+    return {
+        "micro-ag-id": "mAG_A",
+        "parent-asset-id": "ba0270",
+        "architecture-version": "1.0.0",
+        "environment": "production",
+        "effective-date": "2025-01-01T14:00:00Z",
+        "workloads": [
+            {
+                "id": "AIMC/repos/rw-orchestrator-svc_ba0116_pq0177",
+                "asset-id": "pq0177",
+            }
+        ],
+        "name": "Micro Affinity Group A",
     }
 
 
@@ -222,11 +239,11 @@ def test_post_micro_affinity_groups_malformed_json_returns_400_problem_details()
     "payload_builder",
     [
         pytest.param(
-            lambda p: {**p, "architecture-version": "v1.0.0"},
+            lambda p: {**p, "architecture_version": "v1.0.0"},
             id="invalid-architecture-version",
         ),
         pytest.param(
-            lambda p: {**p, "effective-date": "2025-01-01"},
+            lambda p: {**p, "effective_date": "2025-01-01"},
             id="invalid-effective-date",
         ),
         pytest.param(lambda p: {**p, "unexpected": 1}, id="unknown-top-level-field"),
@@ -245,8 +262,9 @@ def test_post_micro_affinity_groups_malformed_json_returns_400_problem_details()
             id="duplicate-workload-id",
         ),
         pytest.param(lambda p: {**p, "workloads": []}, id="empty-workloads"),
-        pytest.param(lambda p: {**p, "architecture-version": 100}, id="wrong-type-version"),
+        pytest.param(lambda p: {**p, "architecture_version": 100}, id="wrong-type-version"),
         pytest.param(lambda p: {**p, "relationships": []}, id="client-supplied-relationships"),
+        pytest.param(lambda p: _legacy_kebab_case_payload(), id="legacy-kebab-case-payload"),
     ],
 )
 def test_post_micro_affinity_groups_invalid_payloads_return_422_problem_details(
@@ -331,7 +349,7 @@ def test_post_micro_affinity_groups_second_time_returns_200_and_overwrites_paylo
         assert first_response.status_code == 201
 
         second_payload = _valid_payload(include_name=False)
-        second_payload["effective-date"] = "2025-02-01T10:00:00Z"
+        second_payload["effective_date"] = "2025-02-01T10:00:00Z"
         second_response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=second_payload)
 
     assert second_response.status_code == 200

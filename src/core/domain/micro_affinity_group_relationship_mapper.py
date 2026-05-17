@@ -46,8 +46,8 @@ class MicroAffinityGroupRelationshipMapper:
 
             workload_id = self._require_string(workload.get("id"), "workload id")
             workload_asset_id = self._require_string(
-                workload.get("asset-id"),
-                "workload asset-id",
+                workload.get("asset_id"),
+                "workload asset_id",
             )
 
             if not outgoing_relationships:
@@ -66,16 +66,16 @@ class MicroAffinityGroupRelationshipMapper:
                 destination_workload = self._workload_from_node(destination_node, workload)
                 transformed["relationships"].append(
                     {
-                        "source-workload": source_workload,
-                        "destination-workload": destination_workload,
+                        "source_workload": source_workload,
+                        "destination_workload": destination_workload,
                     }
                 )
                 self._logger.info(
                     "Resolved relationship %s (%s) -> %s (%s)",
                     source_workload["id"],
-                    source_workload["asset-id"],
+                    source_workload["asset_id"],
                     destination_workload["id"],
-                    destination_workload["asset-id"],
+                    destination_workload["asset_id"],
                 )
 
         return transformed
@@ -86,7 +86,7 @@ class MicroAffinityGroupRelationshipMapper:
         nodes: list[Any],
     ) -> dict[str, Any]:
         workload_id = self._require_string(workload.get("id"), "workload id")
-        workload_asset_id = self._require_string(workload.get("asset-id"), "workload asset-id")
+        workload_asset_id = self._require_string(workload.get("asset_id"), "workload asset_id")
 
         for node in nodes:
             if not isinstance(node, dict):
@@ -105,7 +105,7 @@ class MicroAffinityGroupRelationshipMapper:
                 return node
 
         raise MicroAffinityGroupRelationshipResolutionError(
-            f"No matching source service node found for workload id '{workload_id}' and asset-id '{workload_asset_id}'."
+            f"No matching source service node found for workload id '{workload_id}' and asset_id '{workload_asset_id}'."
         )
 
     def _resolve_destination_node(
@@ -203,7 +203,7 @@ class MicroAffinityGroupRelationshipMapper:
 
         return {
             "id": self._require_string(metadata.get("code-repo"), "service metadata.code-repo"),
-            "asset-id": self._require_string(
+            "asset_id": self._require_string(
                 metadata.get("asset-id"),
                 "service metadata.asset-id",
             ),
