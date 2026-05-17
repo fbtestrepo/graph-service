@@ -11,30 +11,26 @@ class Workload(BaseModel):
         extra='forbid',
     )
     id: str
-    asset_id: str = Field(..., alias='asset-id')
+    asset_id: str
 
 
 class RelationshipEntry(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    source_workload: Workload = Field(..., alias='source-workload')
-    destination_workload: Workload = Field(..., alias='destination-workload')
+    source_workload: Workload
+    destination_workload: Workload
 
 
 class MicroAffinityGroupProcessed(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    micro_ag_id: str = Field(..., alias='micro-ag-id')
+    micro_ag_id: str
     name: str | None = None
-    parent_asset_id: str = Field(..., alias='parent-asset-id')
-    architecture_version: constr(
-        pattern=r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$'
-    ) = Field(..., alias='architecture-version')
+    parent_asset_id: str
+    architecture_version: constr(pattern=r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$')
     environment: str
-    effective_date: constr(pattern=r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$') = Field(
-        ..., alias='effective-date'
-    )
+    effective_date: constr(pattern=r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$')
     workloads: list[Workload] = Field(..., min_length=1)
     relationships: list[RelationshipEntry]

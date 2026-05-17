@@ -17,7 +17,7 @@ class MicroAffinityGroupProcessedRepository(ABC):
         payload: MicroAffinityGroupProcessedPayload,
         session: Any | None = None,
     ) -> bool:
-        """Upsert a processed micro affinity group payload by micro-ag-id + environment + version.
+        """Upsert a processed micro affinity group payload by micro_ag_id + environment + version.
 
         Returns True if the payload was created (inserted), False if it updated/replaced an
         existing document.

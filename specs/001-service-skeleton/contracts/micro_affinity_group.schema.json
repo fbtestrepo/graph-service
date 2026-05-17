@@ -6,15 +6,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "micro-ag-id",
-    "parent-asset-id",
-    "architecture-version",
+    "micro_ag_id",
+    "parent_asset_id",
+    "architecture_version",
     "environment",
-    "effective-date",
+    "effective_date",
     "workloads"
   ],
   "properties": {
-    "micro-ag-id": {
+    "micro_ag_id": {
       "type": "string",
       "minLength": 1
     },
@@ -22,11 +22,11 @@
       "type": "string",
       "minLength": 1
     },
-    "parent-asset-id": {
+    "parent_asset_id": {
       "type": "string",
       "minLength": 1
     },
-    "architecture-version": {
+    "architecture_version": {
       "type": "string",
       "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
     },
@@ -34,7 +34,7 @@
       "type": "string",
       "minLength": 1
     },
-    "effective-date": {
+    "effective_date": {
       "type": "string",
       "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\dZ$"
     },
@@ -53,14 +53,14 @@
       "additionalProperties": false,
       "required": [
         "id",
-        "asset-id"
+        "asset_id"
       ],
       "properties": {
         "id": {
           "type": "string",
           "minLength": 1
         },
-        "asset-id": {
+        "asset_id": {
           "type": "string",
           "minLength": 1
         }

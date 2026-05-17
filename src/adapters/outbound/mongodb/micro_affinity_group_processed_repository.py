@@ -27,9 +27,9 @@ class MongoMicroAffinityGroupProcessedRepository(MicroAffinityGroupProcessedRepo
     ) -> bool:
         result = self._db.get_collection(MICRO_AFFINITY_GROUPS_PROCESSED_COLLECTION).replace_one(
             {
-                "micro-ag-id": micro_ag_id,
+                "micro_ag_id": micro_ag_id,
                 "environment": environment,
-                "architecture-version": architecture_version,
+                "architecture_version": architecture_version,
             },
             payload,
             upsert=True,

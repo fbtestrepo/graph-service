@@ -11,23 +11,21 @@ class MicroAffinityGroupWorkload(BaseModel):
         extra='forbid',
     )
     id: constr(min_length=1)
-    asset_id: constr(min_length=1) = Field(..., alias='asset-id')
+    asset_id: constr(min_length=1)
 
 
 class MicroAffinityGroupDocument(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    micro_ag_id: constr(min_length=1) = Field(..., alias='micro-ag-id')
+    micro_ag_id: constr(min_length=1)
     name: constr(min_length=1) | None = None
-    parent_asset_id: constr(min_length=1) = Field(..., alias='parent-asset-id')
-    architecture_version: constr(
-        pattern=r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$'
-    ) = Field(..., alias='architecture-version')
+    parent_asset_id: constr(min_length=1)
+    architecture_version: constr(pattern=r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$')
     environment: constr(min_length=1)
     effective_date: constr(
         pattern=r'^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d:[0-5]\dZ$'
-    ) = Field(..., alias='effective-date')
+    )
     workloads: list[MicroAffinityGroupWorkload] = Field(
         ...,
         description='Workload IDs must be unique within a request. Architecture lookup rules are enforced outside JSON Schema.',

@@ -56,16 +56,16 @@ def _application_architecture_payload() -> dict[str, Any]:
 
 def _valid_payload(index: int) -> dict[str, Any]:
     return {
-        "micro-ag-id": f"mAG_{index}",
+        "micro_ag_id": f"mAG_{index}",
         "name": "X" * 200000,
-        "parent-asset-id": "ba0270",
-        "architecture-version": "1.0.0",
+        "parent_asset_id": "ba0270",
+        "architecture_version": "1.0.0",
         "environment": "production",
-        "effective-date": "2025-01-01T14:00:00Z",
+        "effective_date": "2025-01-01T14:00:00Z",
         "workloads": [
             {
                 "id": "AIMC/repos/rw-orchestrator-svc_ba0116_pq0177",
-                "asset-id": "pq0177",
+                "asset_id": "pq0177",
             }
         ],
     }

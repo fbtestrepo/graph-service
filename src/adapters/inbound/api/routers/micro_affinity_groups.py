@@ -56,7 +56,6 @@ def upsert_micro_affinity_group(
     )
     result = use_case.execute(
         payload.model_dump(
-            by_alias=True,
             exclude_none=True,
             exclude_defaults=True,
             mode="json",
