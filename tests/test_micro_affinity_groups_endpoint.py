@@ -57,6 +57,13 @@ def _application_architecture_payload(*, include_relationship: bool = True) -> d
     }
 
 
+def _application_architecture_store(*versions: str) -> dict[tuple[str, str], dict[str, Any]]:
+    return {
+        ("ba0270", version): _application_architecture_payload()
+        for version in versions
+    }
+
+
 def _valid_payload(*, include_name: bool = True) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "micro_ag_id": "mAG_A",
@@ -123,17 +130,26 @@ class FakeApplicationArchitectureRepository:
 
 @dataclass(slots=True)
 class FakeMicroAffinityGroupRepository:
-    store: dict[tuple[str, str, str], dict[str, Any]] = field(default_factory=dict)
+    store: dict[tuple[str, str], dict[str, Any]] = field(default_factory=dict)
+    duplicate_counts: dict[tuple[str, str], int] = field(default_factory=dict)
+
+    def count_by_identity(
+        self,
+        micro_ag_id: str,
+        environment: str,
+        session: Any | None = None,
+    ) -> int:
+        key = (micro_ag_id, environment)
+        return self.duplicate_counts.get(key, 1 if key in self.store else 0)
 
     def upsert(
         self,
         micro_ag_id: str,
         environment: str,
-        architecture_version: str,
         payload: dict[str, Any],
         session: Any | None = None,
     ) -> bool:
-        key = (micro_ag_id, environment, architecture_version)
+        key = (micro_ag_id, environment)
         created = key not in self.store
         self.store[key] = payload
         return created
@@ -141,21 +157,30 @@ class FakeMicroAffinityGroupRepository:
 
 @dataclass(slots=True)
 class FakeMicroAffinityGroupProcessedRepository:
-    store: dict[tuple[str, str, str], dict[str, Any]] = field(default_factory=dict)
+    store: dict[tuple[str, str], dict[str, Any]] = field(default_factory=dict)
     fail_on_upsert: bool = False
+    duplicate_counts: dict[tuple[str, str], int] = field(default_factory=dict)
+
+    def count_by_identity(
+        self,
+        micro_ag_id: str,
+        environment: str,
+        session: Any | None = None,
+    ) -> int:
+        key = (micro_ag_id, environment)
+        return self.duplicate_counts.get(key, 1 if key in self.store else 0)
 
     def upsert(
         self,
         micro_ag_id: str,
         environment: str,
-        architecture_version: str,
         payload: dict[str, Any],
         session: Any | None = None,
     ) -> bool:
         if self.fail_on_upsert:
             raise RuntimeError("processed write failed")
 
-        key = (micro_ag_id, environment, architecture_version)
+        key = (micro_ag_id, environment)
         created = key not in self.store
         self.store[key] = payload
         return created
@@ -176,15 +201,15 @@ class FakeTransactionManager:
 
 
 def _configured_client(
-    architecture: dict[str, Any] | None = None,
+    architectures: dict[tuple[str, str], dict[str, Any]] | None = None,
     *,
     processed_fail: bool = False,
 ) -> tuple[TestClient, FakeMicroAffinityGroupRepository, FakeMicroAffinityGroupProcessedRepository]:
     app = create_app()
     client = TestClient(app, raise_server_exceptions=False)
     architecture_repo = FakeApplicationArchitectureRepository()
-    if architecture is not None:
-        architecture_repo.store[("ba0270", "1.0.0")] = architecture
+    if architectures is not None:
+        architecture_repo.store.update(architectures)
 
     repository = FakeMicroAffinityGroupRepository()
     processed_repository = FakeMicroAffinityGroupProcessedRepository(fail_on_upsert=processed_fail)
@@ -198,7 +223,7 @@ def _configured_client(
 
 
 def test_post_micro_affinity_groups_first_time_returns_201_and_processed_payload() -> None:
-    client, _, _ = _configured_client(_application_architecture_payload())
+    client, _, _ = _configured_client(_application_architecture_store("1.0.0"))
 
     with client:
         request_payload = _valid_payload(include_name=True)
@@ -209,7 +234,7 @@ def test_post_micro_affinity_groups_first_time_returns_201_and_processed_payload
 
 
 def test_post_micro_affinity_groups_accepts_omitted_name() -> None:
-    client, _, _ = _configured_client(_application_architecture_payload())
+    client, _, _ = _configured_client(_application_architecture_store("1.0.0"))
 
     with client:
         request_payload = _valid_payload(include_name=False)
@@ -270,7 +295,7 @@ def test_post_micro_affinity_groups_malformed_json_returns_400_problem_details()
 def test_post_micro_affinity_groups_invalid_payloads_return_422_problem_details(
     payload_builder,
 ) -> None:
-    client, repository, _ = _configured_client(_application_architecture_payload())
+    client, repository, _ = _configured_client(_application_architecture_store("1.0.0"))
 
     with client:
         request_payload = payload_builder(_valid_payload())
@@ -300,7 +325,7 @@ def test_post_micro_affinity_groups_missing_architecture_returns_422_problem_det
 def test_post_micro_affinity_groups_missing_source_service_returns_422_problem_details() -> None:
     architecture = _application_architecture_payload()
     architecture["nodes"][0]["metadata"]["code-repo"] = "AIMC/repos/another-service"
-    client, repository, processed_repository = _configured_client(architecture)
+    client, repository, processed_repository = _configured_client({("ba0270", "1.0.0"): architecture})
 
     with client:
         response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload())
@@ -316,7 +341,7 @@ def test_post_micro_affinity_groups_unresolved_destination_returns_422_problem_d
     architecture["relationships"][0]["relationship-type"]["connects"]["destination"][
         "node"
     ] = "node-missing"
-    client, repository, processed_repository = _configured_client(architecture)
+    client, repository, processed_repository = _configured_client({("ba0270", "1.0.0"): architecture})
 
     with client:
         response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload())
@@ -329,7 +354,7 @@ def test_post_micro_affinity_groups_unresolved_destination_returns_422_problem_d
 
 def test_post_micro_affinity_groups_processed_write_failure_returns_500() -> None:
     client, _, _ = _configured_client(
-        _application_architecture_payload(),
+        _application_architecture_store("1.0.0"),
         processed_fail=True,
     )
 
@@ -338,10 +363,14 @@ def test_post_micro_affinity_groups_processed_write_failure_returns_500() -> Non
 
     assert response.status_code == 500
     assert response.headers["content-type"].startswith("application/problem+json")
+    assert client.app.state.micro_affinity_group_repository.store == {}
+    assert client.app.state.micro_affinity_group_processed_repository.store == {}
 
 
-def test_post_micro_affinity_groups_second_time_returns_200_and_overwrites_payload() -> None:
-    client, _, _ = _configured_client(_application_architecture_payload())
+def test_post_micro_affinity_groups_second_time_with_new_version_returns_200_and_overwrites_payload() -> None:
+    client, repository, processed_repository = _configured_client(
+        _application_architecture_store("1.0.0", "2.0.0")
+    )
 
     with client:
         first_payload = _valid_payload(include_name=True)
@@ -349,15 +378,19 @@ def test_post_micro_affinity_groups_second_time_returns_200_and_overwrites_paylo
         assert first_response.status_code == 201
 
         second_payload = _valid_payload(include_name=False)
+        second_payload["architecture_version"] = "2.0.0"
         second_payload["effective_date"] = "2025-02-01T10:00:00Z"
         second_response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=second_payload)
 
     assert second_response.status_code == 200
     assert second_response.json() == _expected_processed_payload(second_payload)
+    assert repository.store[("mAG_A", "production")] == second_payload
+    assert processed_repository.store[("mAG_A", "production")]["architecture_version"] == "2.0.0"
+    assert "name" not in repository.store[("mAG_A", "production")]
 
 
 def test_post_micro_affinity_groups_different_environment_returns_201_and_coexists() -> None:
-    client, _, _ = _configured_client(_application_architecture_payload())
+    client, _, _ = _configured_client(_application_architecture_store("1.0.0"))
 
     with client:
         first_response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload(include_name=True))
@@ -372,7 +405,7 @@ def test_post_micro_affinity_groups_different_environment_returns_201_and_coexis
 
 
 def test_root_micro_affinity_groups_path_is_not_supported() -> None:
-    client, _, _ = _configured_client(_application_architecture_payload())
+    client, _, _ = _configured_client(_application_architecture_store("1.0.0"))
 
     with client:
         response = client.post(MICRO_AFFINITY_GROUPS_PATH.removeprefix("/v1"), json=_valid_payload())
@@ -380,3 +413,23 @@ def test_root_micro_affinity_groups_path_is_not_supported() -> None:
     assert response.status_code == 404
     assert response.headers["content-type"].startswith("application/problem+json")
     assert response.json()["title"] == "Not Found"
+
+
+def test_post_micro_affinity_groups_duplicate_existing_pair_returns_409() -> None:
+    client, repository, processed_repository = _configured_client(
+        _application_architecture_store("1.0.0")
+    )
+    repository.store[("mAG_A", "production")] = _valid_payload()
+    processed_repository.store[("mAG_A", "production")] = _expected_processed_payload(
+        _valid_payload()
+    )
+    repository.duplicate_counts[("mAG_A", "production")] = 2
+
+    with client:
+        response = client.post(MICRO_AFFINITY_GROUPS_PATH, json=_valid_payload())
+
+    assert response.status_code == 409
+    assert response.headers["content-type"].startswith("application/problem+json")
+    assert response.json()["error_code"] == "duplicate_micro_affinity_group_identity"
+    assert repository.store[("mAG_A", "production")]["architecture_version"] == "1.0.0"
+    assert processed_repository.store[("mAG_A", "production")]["architecture_version"] == "1.0.0"

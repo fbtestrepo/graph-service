@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://graph-service/specs/001-service-skeleton/contracts/micro_affinity_group_processed.schema.json",
   "title": "MicroAffinityGroupProcessed",
+  "description": "Processed response/persistence contract for POST /micro-affinity-groups. MAG write identity is based on micro_ag_id plus environment; architecture_version remains required and is preserved in processed MAG documents.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -25,10 +26,12 @@
     },
     "architecture_version": {
       "type": "string",
-      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$",
+      "description": "Required application architecture version used for enrichment lookup. It is preserved in processed MAG documents but is not part of the MAG write identity."
     },
     "environment": {
-      "type": "string"
+      "type": "string",
+      "description": "Environment boundary that participates in the MAG write identity together with micro_ag_id."
     },
     "effective_date": {
       "type": "string",

@@ -8,6 +8,9 @@ from src.core.exceptions.authorization_denied import AuthorizationDenied
 from src.core.exceptions.circular_dependency_detected import CircularDependencyDetected
 from src.core.exceptions.component_not_found import ComponentNotFound
 from src.core.exceptions.duplicate_dependency_edge import DuplicateDependencyEdge
+from src.core.exceptions.duplicate_micro_affinity_group_identity import (
+    DuplicateMicroAffinityGroupIdentity,
+)
 from src.core.exceptions.micro_affinity_group_workload_mismatch import (
     MicroAffinityGroupWorkloadMismatch,
 )
@@ -26,6 +29,11 @@ class DomainErrorMapping:
 _MAPPINGS: dict[type[Exception], DomainErrorMapping] = {
     ComponentNotFound: DomainErrorMapping(status=404, title="Not Found", error_code="component_not_found"),
     DuplicateDependencyEdge: DomainErrorMapping(status=409, title="Conflict", error_code="duplicate_dependency_edge"),
+    DuplicateMicroAffinityGroupIdentity: DomainErrorMapping(
+        status=409,
+        title="Conflict",
+        error_code="duplicate_micro_affinity_group_identity",
+    ),
     CircularDependencyDetected: DomainErrorMapping(
         status=409,
         title="Conflict",

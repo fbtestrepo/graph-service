@@ -86,17 +86,24 @@ class FakeApplicationArchitectureRepository:
 
 @dataclass(slots=True)
 class FakeMicroAffinityGroupRepository:
-    store: dict[tuple[str, str, str], dict[str, Any]] = field(default_factory=dict)
+    store: dict[tuple[str, str], dict[str, Any]] = field(default_factory=dict)
+
+    def count_by_identity(
+        self,
+        micro_ag_id: str,
+        environment: str,
+        session: Any | None = None,
+    ) -> int:
+        return 1 if (micro_ag_id, environment) in self.store else 0
 
     def upsert(
         self,
         micro_ag_id: str,
         environment: str,
-        architecture_version: str,
         payload: dict[str, Any],
         session: Any | None = None,
     ) -> bool:
-        key = (micro_ag_id, environment, architecture_version)
+        key = (micro_ag_id, environment)
         created = key not in self.store
         self.store[key] = payload
         return created
@@ -104,17 +111,24 @@ class FakeMicroAffinityGroupRepository:
 
 @dataclass(slots=True)
 class FakeMicroAffinityGroupProcessedRepository:
-    store: dict[tuple[str, str, str], dict[str, Any]] = field(default_factory=dict)
+    store: dict[tuple[str, str], dict[str, Any]] = field(default_factory=dict)
+
+    def count_by_identity(
+        self,
+        micro_ag_id: str,
+        environment: str,
+        session: Any | None = None,
+    ) -> int:
+        return 1 if (micro_ag_id, environment) in self.store else 0
 
     def upsert(
         self,
         micro_ag_id: str,
         environment: str,
-        architecture_version: str,
         payload: dict[str, Any],
         session: Any | None = None,
     ) -> bool:
-        key = (micro_ag_id, environment, architecture_version)
+        key = (micro_ag_id, environment)
         created = key not in self.store
         self.store[key] = payload
         return created

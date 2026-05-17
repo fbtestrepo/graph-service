@@ -9,6 +9,9 @@ from src.core.exceptions.application_architecture_not_found import (
 from src.core.domain.micro_affinity_group_relationship_mapper import (
     MicroAffinityGroupRelationshipMapper,
 )
+from src.core.exceptions.duplicate_micro_affinity_group_identity import (
+    DuplicateMicroAffinityGroupIdentity,
+)
 from src.core.ports.application_architecture_repository import ApplicationArchitectureRepository
 from src.core.ports.micro_affinity_group_repository import MicroAffinityGroupRepository
 from src.core.ports.micro_affinity_group_processed_repository import (
@@ -38,10 +41,26 @@ class UpsertMicroAffinityGroup:
         micro_ag_id = str(payload["micro_ag_id"])
 
         def _operation(session: object) -> UpsertMicroAffinityGroupResult:
+            raw_count = self.micro_affinity_group_repository.count_by_identity(
+                micro_ag_id=micro_ag_id,
+                environment=environment,
+                session=session,
+            )
+            processed_count = self.micro_affinity_group_processed_repository.count_by_identity(
+                micro_ag_id=micro_ag_id,
+                environment=environment,
+                session=session,
+            )
+
+            if raw_count > 1 or processed_count > 1:
+                raise DuplicateMicroAffinityGroupIdentity(
+                    micro_ag_id=micro_ag_id,
+                    environment=environment,
+                )
+
             self.micro_affinity_group_repository.upsert(
                 micro_ag_id=micro_ag_id,
                 environment=environment,
-                architecture_version=architecture_version,
                 payload=payload,
                 session=session,
             )
@@ -55,13 +74,13 @@ class UpsertMicroAffinityGroup:
                 raise ApplicationArchitectureNotFound(asset_id=asset_id, version=architecture_version)
 
             processed_payload = self.relationship_mapper.transform(payload, architecture)
-            created = self.micro_affinity_group_processed_repository.upsert(
+            self.micro_affinity_group_processed_repository.upsert(
                 micro_ag_id=micro_ag_id,
                 environment=environment,
-                architecture_version=architecture_version,
                 payload=processed_payload,
                 session=session,
             )
+            created = raw_count == 0 and processed_count == 0
             return UpsertMicroAffinityGroupResult(created=created, payload=processed_payload)
 
         return self.transaction_manager.execute(_operation)

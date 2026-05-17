@@ -29,8 +29,16 @@ class MicroAffinityGroupProcessed(BaseModel):
     micro_ag_id: str
     name: str | None = None
     parent_asset_id: str
-    architecture_version: constr(pattern=r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$')
-    environment: str
+    architecture_version: constr(
+        pattern=r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$'
+    ) = Field(
+        ...,
+        description='Required application architecture version used for enrichment lookup. It is preserved in processed MAG documents but is not part of the MAG write identity.',
+    )
+    environment: str = Field(
+        ...,
+        description='Environment boundary that participates in the MAG write identity together with micro_ag_id.',
+    )
     effective_date: constr(pattern=r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$')
     workloads: list[Workload] = Field(..., min_length=1)
     relationships: list[RelationshipEntry]

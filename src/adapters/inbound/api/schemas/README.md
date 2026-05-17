@@ -20,3 +20,6 @@ Micro affinity group note:
 - `micro_affinity_group.py` is generated from the authoritative JSON Schema and then extended with
 	a stable wrapper that rejects duplicate `workload.id` values before the payload reaches the core
 	use case.
+- For MAG writes, the application-side identity is `micro_ag_id + environment`; `architecture_version`
+	remains a required validated field used for application-architecture lookup and is preserved in
+	both raw and processed documents.

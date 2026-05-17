@@ -9,15 +9,25 @@ MicroAffinityGroupPayload = dict[str, Any]
 
 class MicroAffinityGroupRepository(ABC):
     @abstractmethod
+    def count_by_identity(
+        self,
+        micro_ag_id: str,
+        environment: str,
+        session: Any | None = None,
+    ) -> int:
+        """Return the number of stored payloads matching one MAG write identity pair."""
+
+        raise NotImplementedError
+
+    @abstractmethod
     def upsert(
         self,
         micro_ag_id: str,
         environment: str,
-        architecture_version: str,
         payload: MicroAffinityGroupPayload,
         session: Any | None = None,
     ) -> bool:
-        """Upsert a micro affinity group payload by micro_ag_id + environment + version.
+        """Upsert a micro affinity group payload by micro_ag_id + environment.
 
         Returns True if the payload was created (inserted), False if it updated/replaced an
         existing document.

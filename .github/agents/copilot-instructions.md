@@ -1,6 +1,6 @@
 # Dependency Graph Service API Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-05-16
+Auto-generated from all feature plans. Last updated: 2026-05-17
 
 ## Active Technologies
 - Python 3.12 + FastAPI, Pydantic, Motor (MongoDB Atlas), LDAP3 (001-service-skeleton)
@@ -21,6 +21,8 @@ Auto-generated from all feature plans. Last updated: 2026-05-16
 - MongoDB Atlas in production; MongoDB replica-set container for persistence-backed integration tests (010-rename-collection-names)
 - Python 3.12 (project baseline for scaffolding) + FastAPI, Pydantic, Motor (MongoDB), LDAP3 (001-service-skeleton)
 - Python 3.12+ (active workspace venv previously verified on Python 3.14.3) + FastAPI, Pydantic v2, datamodel-code-generator, pymongo, pytest, httpx/TestClient, testcontainers[mongodb], ldap3 (011-snake-case-mag-api)
+- Python 3.12+ (active workspace venv previously verified on Python 3.14.3) + FastAPI, Pydantic v2, pymongo, pytest, FastAPI TestClient/httpx, testcontainers[mongodb], ldap3, datamodel-code-generator (012-mag-upsert-uniqueness)
+- MongoDB Atlas in production; MongoDB replica-set container for persistence-backed tests (012-mag-upsert-uniqueness)
 
 ## Project Structure
 
@@ -39,9 +41,9 @@ tests/
 Python 3.12 (project baseline for scaffolding): Follow standard conventions
 
 ## Recent Changes
+- 012-mag-upsert-uniqueness: Added Python 3.12+ (active workspace venv previously verified on Python 3.14.3) + FastAPI, Pydantic v2, pymongo, pytest, FastAPI TestClient/httpx, testcontainers[mongodb], ldap3, datamodel-code-generator
 - 011-snake-case-mag-api: Added Python 3.12+ (active workspace venv previously verified on Python 3.14.3) + FastAPI, Pydantic v2, datamodel-code-generator, pymongo, pytest, httpx/TestClient, testcontainers[mongodb], ldap3
 - 010-rename-collection-names: Added Python 3.12+ (verified in the active venv on Python 3.14.3) + FastAPI, Pydantic v2, pymongo, pytest, httpx/TestClient, testcontainers[mongodb], ldap3
-- 009-v1-api-prefixing: Added Python 3.12+ (verified in the active venv on Python 3.14.3) + FastAPI, Pydantic v2, pymongo, ldap3, pytest, httpx/TestClien
 
 
 <!-- MANUAL ADDITIONS START -->
