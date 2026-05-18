@@ -34,3 +34,33 @@ class MicroAffinityGroupProcessedRepository(ABC):
         """
 
         raise NotImplementedError
+
+    def get_by_identity(
+        self,
+        micro_ag_id: str,
+        environment: str,
+        session: Any | None = None,
+    ) -> MicroAffinityGroupProcessedPayload | None:
+        """Return one processed MAG payload matching a micro_ag_id + environment pair."""
+
+        raise NotImplementedError
+
+    def list_by_workload_asset_ids(
+        self,
+        asset_ids: list[str],
+        environment: str,
+        session: Any | None = None,
+    ) -> list[MicroAffinityGroupProcessedPayload]:
+        """Return processed MAG payloads that own any of the given workload asset ids."""
+
+        raise NotImplementedError
+
+    def list_by_relationship_destination_asset_ids(
+        self,
+        asset_ids: list[str],
+        environment: str,
+        session: Any | None = None,
+    ) -> list[MicroAffinityGroupProcessedPayload]:
+        """Return processed MAG payloads whose relationships target any of the given asset ids."""
+
+        raise NotImplementedError

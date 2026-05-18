@@ -4,11 +4,15 @@ from fastapi import APIRouter, Depends, Response, status
 
 from src.adapters.inbound.api.dependencies.wiring import (
     get_application_architecture_repository,
+    get_micro_affinity_group_deployment_scope_clock,
     get_micro_affinity_group_repository,
     get_micro_affinity_group_processed_repository,
     get_transaction_manager,
 )
 from src.adapters.inbound.api.schemas.micro_affinity_group import MicroAffinityGroup
+from src.adapters.inbound.api.schemas.micro_affinity_group_deployment_scope import (
+    MicroAffinityGroupDeploymentScope,
+)
 from src.adapters.inbound.api.schemas.micro_affinity_group_processed import (
     MicroAffinityGroupProcessed,
 )
@@ -21,6 +25,9 @@ from src.core.ports.micro_affinity_group_processed_repository import (
     MicroAffinityGroupProcessedRepository,
 )
 from src.core.ports.transaction_manager import TransactionManager
+from src.core.use_cases.get_micro_affinity_group_deployment_scope import (
+    GetMicroAffinityGroupDeploymentScope,
+)
 from src.core.use_cases.upsert_micro_affinity_group import UpsertMicroAffinityGroup
 
 
@@ -63,3 +70,24 @@ def upsert_micro_affinity_group(
     )
     response.status_code = status.HTTP_201_CREATED if result.created else status.HTTP_200_OK
     return MicroAffinityGroupProcessed.model_validate(result.payload)
+
+
+@router.get(
+    "/{id}/deployment-scope",
+    response_model=MicroAffinityGroupDeploymentScope,
+    response_model_exclude_none=True,
+)
+def get_micro_affinity_group_deployment_scope(
+    id: str,
+    environment: str,
+    micro_affinity_group_processed_repository: MicroAffinityGroupProcessedRepository = Depends(
+        get_micro_affinity_group_processed_repository
+    ),
+    now_provider=Depends(get_micro_affinity_group_deployment_scope_clock),
+) -> MicroAffinityGroupDeploymentScope:
+    use_case = GetMicroAffinityGroupDeploymentScope(
+        micro_affinity_group_processed_repository=micro_affinity_group_processed_repository,
+        now_provider=now_provider,
+    )
+    payload = use_case.execute(micro_ag_id=id, environment=environment)
+    return MicroAffinityGroupDeploymentScope.model_validate(payload)

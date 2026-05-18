@@ -17,6 +17,10 @@
   schemas in `src/adapters/inbound/api/schemas/` before calling core use cases.
 - **Error mapping**: Domain exceptions live in `src/core/exceptions/` and are mapped to HTTP in
   `src/infrastructure/errors/` (no stack traces returned to clients).
+- **Traversal error semantics**: For graph-traversal or graph-resolution endpoints, `404` MUST be
+  used only when the primary resource named in the URL path does not exist; if that resource
+  exists but downstream graph resolution fails because dependent records are missing or corrupted,
+  the system MUST return `422 Unprocessable Entity`.
 - **Immutable structure**: Do not add/remove/rename folders from the baseline structure.
 
 ## User Scenarios & Testing *(mandatory)*

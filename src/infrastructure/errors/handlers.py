@@ -16,6 +16,10 @@ from src.core.exceptions.duplicate_dependency_edge import DuplicateDependencyEdg
 from src.core.exceptions.duplicate_micro_affinity_group_identity import (
     DuplicateMicroAffinityGroupIdentity,
 )
+from src.core.exceptions.micro_affinity_group_graph_resolution_error import (
+    MicroAffinityGroupGraphResolutionError,
+)
+from src.core.exceptions.micro_affinity_group_not_found import MicroAffinityGroupNotFound
 from src.core.exceptions.micro_affinity_group_workload_mismatch import (
     MicroAffinityGroupWorkloadMismatch,
 )
@@ -72,11 +76,16 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(ComponentNotFound, cast(object, domain_exception_handler))
     app.add_exception_handler(DuplicateDependencyEdge, cast(object, domain_exception_handler))
     app.add_exception_handler(DuplicateMicroAffinityGroupIdentity, cast(object, domain_exception_handler))
+    app.add_exception_handler(MicroAffinityGroupNotFound, cast(object, domain_exception_handler))
     app.add_exception_handler(CircularDependencyDetected, cast(object, domain_exception_handler))
     app.add_exception_handler(AuthenticationFailed, cast(object, domain_exception_handler))
     app.add_exception_handler(AuthorizationDenied, cast(object, domain_exception_handler))
     app.add_exception_handler(ApplicationArchitectureNotFound, cast(object, domain_exception_handler))
     app.add_exception_handler(MicroAffinityGroupWorkloadMismatch, cast(object, domain_exception_handler))
+    app.add_exception_handler(
+        MicroAffinityGroupGraphResolutionError,
+        cast(object, domain_exception_handler),
+    )
     app.add_exception_handler(
         MicroAffinityGroupRelationshipResolutionError,
         cast(object, domain_exception_handler),

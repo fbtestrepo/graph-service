@@ -1,0 +1,52 @@
+openapi: 3.1.0
+info:
+  title: Dependency Graph Service API
+  version: 013-mag-deployment-scope
+  description: >-
+    Planning-time contract for the deployment-scope endpoint. Success responses are feature-local;
+    problem-details responses reuse the shared service contract.
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+
+paths:
+  /v1/micro-affinity-groups/{id}/deployment-scope:
+    get:
+      tags: [micro-affinity-groups]
+      summary: Get deployment scope for a processed micro affinity group
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: environment
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: Deployment scope resolved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: ./deployment_scope_response.schema.json
+        '404':
+          description: Requested root MAG/environment pair not found.
+          content:
+            application/problem+json:
+              schema:
+                $ref: ../../001-service-skeleton/contracts/problem_details.schema.json
+        '422':
+          description: Root exists but downstream graph resolution failed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: ../../001-service-skeleton/contracts/problem_details.schema.json
+        '500':
+          description: Internal server error.
+          content:
+            application/problem+json:
+              schema:
+                $ref: ../../001-service-skeleton/contracts/problem_details.schema.json

@@ -74,7 +74,9 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T005 [P] Define core ports in `src/core/ports/` for MongoDB + LDAP
 - [ ] T006 [P] Implement outbound adapters in `src/adapters/outbound/{mongodb,ldap}/`
 - [ ] T007 [P] Scaffold inbound FastAPI layer in `src/adapters/inbound/api/`
-- [ ] T008 [P] Add global exception handlers in `src/infrastructure/errors/` (map domain -> HTTP)
+- [ ] T008 [P] Add global exception handlers in `src/infrastructure/errors/` (map domain -> HTTP,
+  reserving `404` for missing path resources and `422` for downstream graph-resolution failures
+  after root existence is confirmed)
 - [ ] T009 Configure `src/infrastructure/config/` and DI wiring in `src/infrastructure/main.py`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
@@ -101,6 +103,8 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T014 [US1] Implement [Service] in src/services/[service].py (depends on T012, T013)
 - [ ] T015 [US1] Implement [endpoint/feature] in src/[location]/[file].py
 - [ ] T016 [US1] Add validation and error handling
+- [ ] T016a [US1] Add graph-traversal error-path tests covering missing root `404` versus existing
+  root with downstream resolution failure `422` when the story traverses stored relationships
 - [ ] T017 [US1] Add logging for user story 1 operations
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently

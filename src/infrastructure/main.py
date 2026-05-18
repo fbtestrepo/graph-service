@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, FastAPI
 
 from src.adapters.inbound.api.routers.application_architectures import (
@@ -81,6 +83,9 @@ def create_app() -> FastAPI:
             app.state.micro_affinity_group_processed_repository = (
                 MongoMicroAffinityGroupProcessedRepository(app.state.mongo_db)
             )
+
+        if not hasattr(app.state, "micro_affinity_group_deployment_scope_clock"):
+            app.state.micro_affinity_group_deployment_scope_clock = lambda: datetime.now(UTC)
 
         if not hasattr(app.state, "transaction_manager"):
             app.state.transaction_manager = MongoTransactionManager(app.state.mongo_client)

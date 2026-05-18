@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "micro_ag_edge.schema.json",
+  "title": "MicroAgEdge",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "source_micro_ag_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "destination_micro_ag_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "is_cyclic": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "source_micro_ag_id",
+    "destination_micro_ag_id"
+  ]
+}

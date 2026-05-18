@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from collections.abc import Callable
+from datetime import datetime
+
 from fastapi import Request
 
 
@@ -31,6 +34,10 @@ def get_micro_affinity_group_repository(request: Request) -> Any:
 
 def get_micro_affinity_group_processed_repository(request: Request) -> Any:
     return request.app.state.micro_affinity_group_processed_repository
+
+
+def get_micro_affinity_group_deployment_scope_clock(request: Request) -> Callable[[], datetime]:
+    return request.app.state.micro_affinity_group_deployment_scope_clock
 
 
 def get_transaction_manager(request: Request) -> Any:

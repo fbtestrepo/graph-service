@@ -43,6 +43,9 @@ Required gates for this project (see `.specify/memory/constitution.md`):
   `src/adapters/inbound/api/schemas/` before calling core use cases.
 - Errors: New domain exceptions are defined in `src/core/exceptions/` and mapped to HTTP in
   `src/infrastructure/errors/` without leaking stack traces.
+- Traversal semantics: For graph-traversal or graph-resolution endpoints, `404` is reserved for a
+  missing primary path resource; once that resource exists, downstream graph-resolution failures
+  map to `422`.
 - Structure: Folder structure remains unchanged unless explicitly approved.
 
 ## Project Structure

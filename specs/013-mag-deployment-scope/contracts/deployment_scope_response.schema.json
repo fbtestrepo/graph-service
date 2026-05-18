@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "deployment_scope_response.schema.json",
+  "title": "DeploymentScopeResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "micro_ag_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "environment": {
+      "type": "string",
+      "minLength": 1
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "graph_has_cycles": {
+      "type": "boolean"
+    },
+    "dependency_graph": {
+      "type": "array",
+      "items": {
+        "$ref": "./micro_ag_edge.schema.json"
+      }
+    },
+    "deployment_sequence": {
+      "$ref": "./deployment_sequence.schema.json"
+    }
+  },
+  "required": [
+    "micro_ag_id",
+    "environment",
+    "effective_date",
+    "graph_has_cycles",
+    "dependency_graph",
+    "deployment_sequence"
+  ]
+}

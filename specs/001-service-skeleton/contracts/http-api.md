@@ -30,9 +30,10 @@ Optional fields:
 - 400: Malformed business request
 - 401: LDAP authentication failed
 - 403: LDAP authorization failed
-- 404: Node/dependency not found
+- 404: Primary path resource not found
 - 409: State conflict (duplicate edge)
-- 422: Validation error (schema/constraints)
+- 422: Validation error (schema/constraints) or downstream graph/data-integrity failure after the
+  primary path resource is confirmed to exist
 - 500: Unhandled infrastructure failure (no stack trace leaked)
 
 ## Endpoints
@@ -150,5 +151,7 @@ Semantics:
 - Response: `200 application/json` body conforming to `component_dependencies_response.schema.json`
 - Error responses:
   - `404 application/problem+json` when the root node does not exist
+  - `422 application/problem+json` when the root node exists but required downstream records cannot
+    be resolved consistently during graph traversal
   - `500 application/problem+json` for unhandled errors (no stack trace leaked)
 
