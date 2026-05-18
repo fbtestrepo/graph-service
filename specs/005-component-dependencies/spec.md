@@ -24,6 +24,10 @@
 - Q: When extracting dependency edges from stored component-node documents, how should we treat a relationship where `relationships[i].source.node-id` does not equal the document’s top-level `node-id`? → A: Filter to “self-sourced” only: only emit relationships where `relationship.source.node-id == document.node-id`; ignore the rest.
 - Q: How should we define reachability + hop count when we say “upstream and downstream” with a 20-hop cap? → A: Two directed traversals from the root: compute (1) downstream closure by following `source-node-id → target-node-id` only, and (2) upstream closure by following `target-node-id → source-node-id` only. Union the results. Apply the 20-hop cap within each directed traversal (relative to the root).
 
+### Session 2026-05-17
+
+- Q: Which failure modes may return `404 Not Found` versus `422 Unprocessable Entity` for graph traversal? → A: Reserve `404` strictly for the root `node-id` named in the path being absent from stored component nodes. If that root exists but traversal cannot resolve a required downstream or intermediate record consistently, the service MUST return `422 Unprocessable Entity`, not `404`.
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--
@@ -91,6 +95,8 @@
 - Graph contains self-referential edges (A → A).
 - Multiple edges exist between the same pair of nodes (different `relationship-type` values).
 - Some edges reference node-ids that do not exist as stored component nodes.
+- The root node exists, but traversal reaches an intermediate dependency record that is missing,
+  stale, or otherwise unresolvable.
 - Large reachable subgraph (many nodes/edges) still returns a complete, deduplicated result.
 - Traversal depth boundary at 20 hops.
 - Relationship record where `relationship.source.node-id != document.node-id`.
@@ -126,6 +132,8 @@
   - upstream reachability by traversing edges in the reverse direction (`target-node-id → source-node-id`) starting from the root,
 
   then return the union of edges discovered by both traversals. The 20-hop cap (and boundary behavior in FR-013) MUST apply separately within each directed traversal relative to the root.
+- **FR-016**: `404 Not Found` MUST be used only when the root `node-id` supplied directly in the request path does not exist in stored component nodes.
+- **FR-017**: If the root `node-id` exists but traversal cannot fully resolve required downstream or intermediate dependency records consistently, the system MUST fail fast with `422 Unprocessable Entity` and MUST NOT translate that condition into `404 Not Found`.
 
 Assumptions (non-functional scope notes):
 
@@ -148,3 +156,4 @@ Assumptions (non-functional scope notes):
 - **SC-002**: When requesting dependencies for a `node-id` that does not exist, the system returns `404 Not Found` in 100% of attempts.
 - **SC-003**: For a reachable dependency subgraph containing at least 100 unique edges, at least 95 out of 100 sequential requests (after a warm-up of 5 requests, not counted) complete within 1.0 seconds as observed by the client.
 - **SC-004**: For a reachable dependency subgraph that contains at least one cycle, the endpoint returns successfully and the result contains no duplicate edges.
+- **SC-005**: In acceptance testing, 100% of requests where the root exists but a required downstream traversal record is intentionally made unavailable return `422 Unprocessable Entity`, while 100% of requests for a missing root return `404 Not Found`.

@@ -41,6 +41,16 @@ Infrastructure and documentation routes remain at the root path:
 Former root business paths such as `/components` and `/micro-affinity-groups` are no longer part
 of the supported route surface.
 
+## Error Semantics
+
+- `404 Not Found` is reserved for the primary resource identified directly by the request path not
+	existing in persistence.
+- `422 Unprocessable Entity` is used for request-schema validation failures and for
+	graph-traversal/data-integrity failures where the primary path resource exists but downstream
+	resolution cannot be completed consistently.
+- Graph-traversal endpoints must not return `404` for broken downstream dependencies once the root
+	resource has been confirmed to exist.
+
 ## Tests
 
 ```bash

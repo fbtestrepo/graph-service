@@ -1,11 +1,12 @@
 <!--
 Sync Impact Report
 
-- Version change: 1.0.0 -> 1.1.0
+- Version change: 1.1.0 -> 1.2.0
 - Modified principles:
 
-  - II. Specification-Driven API Contracts & Validation
-  - V. Immutable Project Structure
+  - III. Domain Errors & HTTP Classification
+  - Workflow & Quality Gates
+  - Governance
 - Added sections:
 
   - None
@@ -18,11 +19,7 @@ Sync Impact Report
   - ✅ updated: .specify/templates/spec-template.md
   - ✅ updated: .specify/templates/tasks-template.md
   - ✅ updated: .specify/templates/checklist-template.md
-  - ✅ verified: no additional template updates required
-- Runtime guidance docs updated:
-
-  - ✅ updated: README.md
-  - ✅ updated: src/adapters/inbound/api/schemas/README.md
+  - ✅ verified: .specify/templates/commands/ is not present in this repository
 - Deferred TODOs:
 
   - None
@@ -79,14 +76,24 @@ Non-negotiables:
   HTTP-specific terminology.
 - Domain exceptions MUST be caught by global exception handlers in `src/infrastructure/errors/`
   and mapped to semantically correct HTTP responses.
+- For graph-traversal or graph-resolution endpoints, `404 Not Found` MUST be reserved strictly for
+  the primary resource identifier supplied directly in the URL path being absent from the
+  authoritative persistence store.
+- For graph-traversal or graph-resolution endpoints, once the primary path resource is confirmed to
+  exist, any failure to resolve, traverse, or construct the downstream graph because required
+  intermediate or dependent records are missing, stale, unsynced, or corrupted MUST raise a
+  structured domain validation exception that maps to `422 Unprocessable Entity`, not `404`.
 - Stack traces and internal error details MUST NOT be returned to clients.
 
 Required HTTP classification:
 - `400 Bad Request`: Malformed business logic requests.
 - `401 Unauthorized`: Failed LDAP authentication.
 - `403 Forbidden`: Insufficient LDAP authorization/roles.
-- `404 Not Found`: Requested graph nodes/dependencies do not exist in MongoDB.
+- `404 Not Found`: The primary resource identified directly by the request path does not exist in
+  MongoDB.
 - `409 Conflict`: State conflicts (e.g., attempting to create a duplicate edge).
+- `422 Unprocessable Entity`: Schema/validation failures, or graph/data-integrity failures where
+  the primary resource exists but downstream resolution cannot be completed consistently.
 - `500 Internal Server Error`: Unhandled adapter/infrastructure failures.
 
 Rationale: Keeps the domain model portable while providing a predictable REST error contract.
@@ -179,6 +186,9 @@ Delivery expectations for all changes:
 
   `src/adapters/inbound/api/schemas/` before calling core use cases.
 - Error mapping: any new domain exception MUST be mapped in `src/infrastructure/errors/`.
+- Traversal error semantics: graph-traversal endpoints MUST return `404` only when the primary
+  path resource does not exist; once that resource exists, downstream graph-resolution failures
+  MUST return `422` via structured domain exceptions.
 - No core framework imports: review MUST confirm `src/core/` stays free of framework/driver
 
   imports.
@@ -211,6 +221,8 @@ Compliance expectations:
   - `schemas/` is updated when canonical data contracts change
   - Inbound validation rejects invalid payloads before the core
   - Domain exceptions are mapped to correct HTTP responses
+  - Graph-traversal endpoints reserve `404` for missing path resources and use `422` for
+    downstream resolution failures after root existence is confirmed
   - Folder structure remains unchanged unless explicitly approved
 
-**Version**: 1.1.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-05-02
+**Version**: 1.2.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-05-17

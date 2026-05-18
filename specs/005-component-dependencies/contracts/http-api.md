@@ -21,6 +21,8 @@ Returns the transitive dependency graph for the component identified by `{node_i
 
 - `200 OK`: `ComponentDependenciesResponse`
 - `404 Not Found`: root node-id does not exist
+- `422 Unprocessable Entity`: root node exists but downstream graph resolution fails because a
+  required intermediate or dependent record cannot be resolved consistently
 - `500 Internal Server Error`: unexpected failure
 
 ### Response schema

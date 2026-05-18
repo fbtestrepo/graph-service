@@ -216,7 +216,13 @@ paths:
               schema:
                 $ref: ./component_dependencies_response.schema.json
         "404":
-          description: Not found
+          description: Root node not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: ./problem_details.schema.json
+        "422":
+          description: Root node exists but downstream graph resolution failed because required dependent records could not be resolved consistently
           content:
             application/problem+json:
               schema:

@@ -53,7 +53,9 @@ Purpose: Retrieve the dependency graph for a component node.
 
 - Path parameter: `node_id` unchanged in meaning
 - Success response: `200 OK` with the existing dependency response contract
-- Error responses: unchanged from the existing contract
+- Error responses: unchanged from the existing contract, including `404 Not Found` only when the
+  root path resource is missing and `422 Unprocessable Entity` when the root exists but downstream
+  graph resolution fails
 
 ### POST /v1/application-architectures
 

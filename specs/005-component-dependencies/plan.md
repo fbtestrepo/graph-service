@@ -11,7 +11,9 @@ Add a new endpoint `GET /components/{node_id}/dependencies` that returns a compo
 transitive dependency graph (upstream + downstream) as an edge list.
 
 Edges are derived from stored component-node relationship data (as persisted by `POST /components`).
-The endpoint returns `404 Not Found` when the root `node-id` does not exist.
+The endpoint returns `404 Not Found` when the root `node-id` does not exist, and returns
+`422 Unprocessable Entity` when the root exists but downstream traversal cannot resolve required
+intermediate records consistently.
 
 Graph traversal must:
 - expand one hop at a time (level-order)
@@ -139,6 +141,7 @@ No constitution violations requiring justification.
   - Implement this query in the Mongo adapter.
 5. HTTP behavior:
   - Return `404` if the root node is not found.
+  - Return `422` if the root exists but downstream graph resolution fails after traversal starts.
   - Return `200` and the edge list otherwise.
 6. Tests:
   - Add unit tests for traversal behavior (transitive, upstream+downstream, cycles, depth cap).

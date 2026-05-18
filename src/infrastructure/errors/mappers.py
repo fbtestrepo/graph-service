@@ -11,6 +11,10 @@ from src.core.exceptions.duplicate_dependency_edge import DuplicateDependencyEdg
 from src.core.exceptions.duplicate_micro_affinity_group_identity import (
     DuplicateMicroAffinityGroupIdentity,
 )
+from src.core.exceptions.micro_affinity_group_graph_resolution_error import (
+    MicroAffinityGroupGraphResolutionError,
+)
+from src.core.exceptions.micro_affinity_group_not_found import MicroAffinityGroupNotFound
 from src.core.exceptions.micro_affinity_group_workload_mismatch import (
     MicroAffinityGroupWorkloadMismatch,
 )
@@ -34,6 +38,11 @@ _MAPPINGS: dict[type[Exception], DomainErrorMapping] = {
         title="Conflict",
         error_code="duplicate_micro_affinity_group_identity",
     ),
+    MicroAffinityGroupNotFound: DomainErrorMapping(
+        status=404,
+        title="Not Found",
+        error_code="micro_affinity_group_not_found",
+    ),
     CircularDependencyDetected: DomainErrorMapping(
         status=409,
         title="Conflict",
@@ -55,6 +64,11 @@ _MAPPINGS: dict[type[Exception], DomainErrorMapping] = {
         status=422,
         title="Unprocessable Entity",
         error_code="micro_affinity_group_relationship_resolution_error",
+    ),
+    MicroAffinityGroupGraphResolutionError: DomainErrorMapping(
+        status=422,
+        title="Unprocessable Entity",
+        error_code="micro_affinity_group_graph_resolution_error",
     ),
 }
 

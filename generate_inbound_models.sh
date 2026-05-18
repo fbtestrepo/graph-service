@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONTRACTS_DIR="$ROOT_DIR/specs/001-service-skeleton/contracts"
+FEATURE_013_CONTRACTS_DIR="$ROOT_DIR/specs/013-mag-deployment-scope/contracts"
 OUT_DIR="$ROOT_DIR/src/adapters/inbound/api/schemas"
 
 PYTHON_BIN="${PYTHON:-}"
@@ -223,3 +224,68 @@ rm -rf "$tmp_codegen_dir"
   --output "$OUT_DIR/json_value.py" \
   --disable-timestamp \
   --output-model-type pydantic_v2.BaseModel
+
+tmp_codegen_dir="$ROOT_DIR/tmp_codegen_micro_affinity_group_deployment_scope"
+rm -rf "$tmp_codegen_dir"
+mkdir -p "$tmp_codegen_dir"
+
+"$PYTHON_BIN" -m datamodel_code_generator \
+  --input "$FEATURE_013_CONTRACTS_DIR/deployment_scope_response.schema.json" \
+  --input-file-type jsonschema \
+  --output "$tmp_codegen_dir" \
+  --disable-timestamp \
+  --output-model-type pydantic_v2.BaseModel
+
+if [ ! -f "$tmp_codegen_dir/__init__.py" ]; then
+  echo "Expected $tmp_codegen_dir/__init__.py to be generated" >&2
+  exit 1
+fi
+
+cp "$tmp_codegen_dir/__init__.py" "$OUT_DIR/micro_affinity_group_deployment_scope.py"
+cp "$tmp_codegen_dir/deployment_sequence.py" "$OUT_DIR/micro_affinity_group_deployment_sequence.py"
+cp "$tmp_codegen_dir/deployment_step.py" "$OUT_DIR/micro_affinity_group_deployment_step.py"
+cp "$tmp_codegen_dir/micro_ag_edge.py" "$OUT_DIR/micro_affinity_group_deployment_edge.py"
+
+"$PYTHON_BIN" -c "
+from pathlib import Path
+
+out_dir = Path(r'$OUT_DIR')
+
+main_path = out_dir / 'micro_affinity_group_deployment_scope.py'
+main = main_path.read_text(encoding='utf-8')
+main = main.replace(
+    'from . import deployment_sequence as deployment_sequence_1',
+    'from . import micro_affinity_group_deployment_sequence as deployment_sequence_1',
+)
+main = main.replace(
+    'from . import micro_ag_edge',
+    'from . import micro_affinity_group_deployment_edge as micro_ag_edge',
+)
+main = main.replace('class DeploymentScopeResponse(BaseModel):', 'class MicroAffinityGroupDeploymentScope(BaseModel):')
+main = main.replace('list[micro_ag_edge.Schema]', 'list[micro_ag_edge.MicroAgEdge]')
+main = main.replace('deployment_sequence_1.Schema', 'deployment_sequence_1.DeploymentSequence')
+main_path.write_text(main, encoding='utf-8')
+
+sequence_path = out_dir / 'micro_affinity_group_deployment_sequence.py'
+sequence = sequence_path.read_text(encoding='utf-8')
+sequence = sequence.replace(
+    'from . import deployment_step, micro_ag_edge',
+    'from . import micro_affinity_group_deployment_step as deployment_step\nfrom . import micro_affinity_group_deployment_edge as micro_ag_edge',
+)
+sequence = sequence.replace('class Schema(BaseModel):', 'class DeploymentSequence(BaseModel):')
+sequence = sequence.replace('list[micro_ag_edge.Schema]', 'list[micro_ag_edge.MicroAgEdge]')
+sequence = sequence.replace('list[deployment_step.Schema]', 'list[deployment_step.DeploymentStep]')
+sequence_path.write_text(sequence, encoding='utf-8')
+
+step_path = out_dir / 'micro_affinity_group_deployment_step.py'
+step = step_path.read_text(encoding='utf-8')
+step = step.replace('class Schema(BaseModel):', 'class DeploymentStep(BaseModel):')
+step_path.write_text(step, encoding='utf-8')
+
+edge_path = out_dir / 'micro_affinity_group_deployment_edge.py'
+edge = edge_path.read_text(encoding='utf-8')
+edge = edge.replace('class Schema(BaseModel):', 'class MicroAgEdge(BaseModel):')
+edge_path.write_text(edge, encoding='utf-8')
+"
+
+rm -rf "$tmp_codegen_dir"

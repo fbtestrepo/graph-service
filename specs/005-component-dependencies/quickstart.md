@@ -130,3 +130,10 @@ curl -i -sS http://localhost:8000/components/does-not-exist/dependencies
 Expected:
 - Status: `404 Not Found`
 - Response content-type: `application/problem+json`
+
+If the root node exists but a required downstream traversal record is missing or otherwise
+unresolvable, the endpoint must return:
+
+- Status: `422 Unprocessable Entity`
+- Body: Problem Details payload indicating downstream graph resolution failed after root existence
+  was confirmed.

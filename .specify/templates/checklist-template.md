@@ -32,6 +32,7 @@
 - [ ] CHK005 Constitution check: domain exceptions in `src/core/exceptions/`
 - [ ] CHK006 Constitution check: exception handlers map to correct HTTP codes; no stack traces leaked
 - [ ] CHK007 Constitution check: folder structure unchanged unless explicitly approved
+- [ ] CHK008 Constitution check: graph-traversal endpoints use `404` only for missing path resources and `422` for downstream resolution failures after the root exists
 
 ## Notes
 
