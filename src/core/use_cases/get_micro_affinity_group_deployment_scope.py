@@ -9,7 +9,8 @@ from typing import Any
 from src.core.domain.micro_affinity_group_deployment_graph import (
     MicroAffinityGroupEdge,
     build_deployment_steps,
-    reduce_cyclic_edges,
+    find_path_scoped_cyclic_edges,
+    remove_bypassed_edges,
 )
 from src.core.exceptions.micro_affinity_group_graph_resolution_error import (
     MicroAffinityGroupGraphResolutionError,
@@ -66,6 +67,13 @@ class GetMicroAffinityGroupDeploymentScope:
             document_cache=document_cache,
             in_scope_nodes=in_scope_nodes,
         )
+        traversal_roots = sorted(
+            edge.source_micro_ag_id
+            for edge in dependency_edges
+            if edge.destination_micro_ag_id == root_document.micro_ag_id
+        )
+        if root_document.micro_ag_id not in traversal_roots:
+            traversal_roots.append(root_document.micro_ag_id)
         dependency_edges |= self._resolve_downstream_edges(
             root_document=root_document,
             environment=environment,
@@ -73,7 +81,8 @@ class GetMicroAffinityGroupDeploymentScope:
             in_scope_nodes=in_scope_nodes,
         )
 
-        reduced_edges, bypassed_edges = reduce_cyclic_edges(dependency_edges)
+        bypassed_edges = find_path_scoped_cyclic_edges(traversal_roots, dependency_edges)
+        reduced_edges = remove_bypassed_edges(dependency_edges, bypassed_edges)
         try:
             deployment_steps = build_deployment_steps(in_scope_nodes, reduced_edges)
         except ValueError as exc:
