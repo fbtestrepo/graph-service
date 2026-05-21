@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from dataclasses import dataclass
 
 
@@ -13,22 +12,48 @@ class MicroAffinityGroupEdge:
         return (self.source_micro_ag_id, self.destination_micro_ag_id)
 
 
-def reduce_cyclic_edges(
+def find_path_scoped_cyclic_edges(
+    traversal_roots: list[str],
     edges: set[MicroAffinityGroupEdge],
-) -> tuple[set[MicroAffinityGroupEdge], list[MicroAffinityGroupEdge]]:
-    remaining_edges = set(edges)
-    bypassed_edges: list[MicroAffinityGroupEdge] = []
+) -> list[MicroAffinityGroupEdge]:
+    adjacency: dict[str, list[str]] = {}
+    edge_lookup = {edge.sort_key(): edge for edge in edges}
 
-    while True:
-        cycle_edges = _find_cycle_edges(remaining_edges)
-        if not cycle_edges:
-            break
+    for edge in sorted(edges, key=lambda edge: edge.sort_key()):
+        adjacency.setdefault(edge.source_micro_ag_id, []).append(edge.destination_micro_ag_id)
 
-        edge_to_bypass = min(cycle_edges, key=lambda edge: edge.sort_key())
-        remaining_edges.remove(edge_to_bypass)
-        bypassed_edges.append(edge_to_bypass)
+    visited: set[str] = set()
+    active_path_nodes: set[str] = set()
+    cyclic_edges: set[MicroAffinityGroupEdge] = set()
 
-    return remaining_edges, sorted(bypassed_edges, key=lambda edge: edge.sort_key())
+    def _visit(node: str) -> None:
+        visited.add(node)
+        active_path_nodes.add(node)
+
+        for neighbor in adjacency.get(node, []):
+            edge = edge_lookup[(node, neighbor)]
+            if neighbor in active_path_nodes:
+                cyclic_edges.add(edge)
+                continue
+            if neighbor in visited:
+                continue
+            _visit(neighbor)
+
+        active_path_nodes.remove(node)
+
+    for root_micro_ag_id in traversal_roots:
+        if root_micro_ag_id in visited:
+            continue
+        _visit(root_micro_ag_id)
+
+    return sorted(cyclic_edges, key=lambda edge: edge.sort_key())
+
+
+def remove_bypassed_edges(
+    edges: set[MicroAffinityGroupEdge],
+    bypassed_edges: list[MicroAffinityGroupEdge],
+) -> set[MicroAffinityGroupEdge]:
+    return set(edges) - set(bypassed_edges)
 
 
 def build_deployment_steps(
@@ -63,76 +88,3 @@ def build_deployment_steps(
 
     return steps
 
-
-def _find_cycle_edges(edges: set[MicroAffinityGroupEdge]) -> set[MicroAffinityGroupEdge]:
-    adjacency: dict[str, set[str]] = defaultdict(set)
-    nodes: set[str] = set()
-    for edge in edges:
-        adjacency[edge.source_micro_ag_id].add(edge.destination_micro_ag_id)
-        nodes.add(edge.source_micro_ag_id)
-        nodes.add(edge.destination_micro_ag_id)
-
-    strongly_connected_components = _tarjan_strongly_connected_components(nodes, adjacency)
-    cycle_edges: set[MicroAffinityGroupEdge] = set()
-
-    for component in strongly_connected_components:
-        if len(component) > 1:
-            cycle_edges |= {
-                edge
-                for edge in edges
-                if edge.source_micro_ag_id in component and edge.destination_micro_ag_id in component
-            }
-            continue
-
-        node = next(iter(component))
-        self_edge = MicroAffinityGroupEdge(node, node)
-        if self_edge in edges:
-            cycle_edges.add(self_edge)
-
-    return cycle_edges
-
-
-def _tarjan_strongly_connected_components(
-    nodes: set[str],
-    adjacency: dict[str, set[str]],
-) -> list[set[str]]:
-    index = 0
-    stack: list[str] = []
-    stack_members: set[str] = set()
-    indexes: dict[str, int] = {}
-    lowlinks: dict[str, int] = {}
-    components: list[set[str]] = []
-
-    def _strongconnect(node: str) -> None:
-        nonlocal index
-
-        indexes[node] = index
-        lowlinks[node] = index
-        index += 1
-        stack.append(node)
-        stack_members.add(node)
-
-        for neighbor in sorted(adjacency.get(node, ())):
-            if neighbor not in indexes:
-                _strongconnect(neighbor)
-                lowlinks[node] = min(lowlinks[node], lowlinks[neighbor])
-            elif neighbor in stack_members:
-                lowlinks[node] = min(lowlinks[node], indexes[neighbor])
-
-        if lowlinks[node] != indexes[node]:
-            return
-
-        component: set[str] = set()
-        while stack:
-            member = stack.pop()
-            stack_members.remove(member)
-            component.add(member)
-            if member == node:
-                break
-        components.append(component)
-
-    for node in sorted(nodes):
-        if node not in indexes:
-            _strongconnect(node)
-
-    return components

@@ -52,6 +52,25 @@ def _processed_mag_payload(
     }
 
 
+def _reported_cycle_documents(*, include_back_edge: bool) -> list[dict[str, Any]]:
+    return [
+        _processed_mag_payload("A", "preproduction", dependency_micro_ag_ids=["C"]),
+        _processed_mag_payload("B", "preproduction", dependency_micro_ag_ids=["C"]),
+        _processed_mag_payload("C", "preproduction", dependency_micro_ag_ids=["D"]),
+        _processed_mag_payload("D", "preproduction", dependency_micro_ag_ids=["E"]),
+        _processed_mag_payload("E", "preproduction", dependency_micro_ag_ids=["E1", "E2", "E3"]),
+        _processed_mag_payload(
+            "E1",
+            "preproduction",
+            dependency_micro_ag_ids=["C"] if include_back_edge else [],
+        ),
+        _processed_mag_payload("E2", "preproduction"),
+        _processed_mag_payload("E3", "preproduction"),
+        _processed_mag_payload("F", "preproduction", dependency_micro_ag_ids=["E"]),
+        _processed_mag_payload("G", "preproduction", dependency_micro_ag_ids=["F"]),
+    ]
+
+
 def test_get_deployment_scope_persistence_is_environment_scoped_deduplicated_and_read_only(
     app_with_mongodb,
 ) -> None:
@@ -82,10 +101,19 @@ def test_get_deployment_scope_persistence_is_environment_scoped_deduplicated_and
         after_documents = list(collection.find({}, projection={"_id": False}))
 
     assert response.status_code == 200
+    assert response.json()["graph_has_cycles"] is False
     assert response.json()["dependency_graph"] == [
         {"source_micro_ag_id": "B", "destination_micro_ag_id": "C"},
         {"source_micro_ag_id": "C", "destination_micro_ag_id": "D"},
     ]
+    assert response.json()["deployment_sequence"] == {
+        "bypassed_edges": [],
+        "steps": [
+            {"step_index": 1, "micro_ag_ids": ["D"]},
+            {"step_index": 2, "micro_ag_ids": ["C"]},
+            {"step_index": 3, "micro_ag_ids": ["B"]},
+        ],
+    }
     assert len(after_documents) == len(before_documents)
     assert sorted(after_documents, key=lambda doc: (doc["environment"], doc["micro_ag_id"])) == sorted(
         deepcopy(before_documents),
@@ -157,6 +185,13 @@ def test_get_deployment_scope_persistence_returns_cyclic_deployment_sequence(app
 
     assert response.status_code == 200
     assert response.json()["graph_has_cycles"] is True
+    assert response.json()["dependency_graph"] == [
+        {"source_micro_ag_id": "B", "destination_micro_ag_id": "C"},
+        {"source_micro_ag_id": "C", "destination_micro_ag_id": "D"},
+        {"source_micro_ag_id": "D", "destination_micro_ag_id": "E"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "A"},
+        {"source_micro_ag_id": "A", "destination_micro_ag_id": "B", "is_cyclic": True},
+    ]
     assert response.json()["deployment_sequence"] == {
         "bypassed_edges": [{"source_micro_ag_id": "A", "destination_micro_ag_id": "B"}],
         "steps": [
@@ -165,5 +200,108 @@ def test_get_deployment_scope_persistence_returns_cyclic_deployment_sequence(app
             {"step_index": 3, "micro_ag_ids": ["D"]},
             {"step_index": 4, "micro_ag_ids": ["C"]},
             {"step_index": 5, "micro_ag_ids": ["B"]},
+        ],
+    }
+
+
+def test_get_deployment_scope_persistence_returns_reported_path_scoped_cycle_response(
+    app_with_mongodb,
+) -> None:
+    app = app_with_mongodb
+
+    with TestClient(app) as client:
+        collection = client.app.state.mongo_db.get_collection(
+            MICRO_AFFINITY_GROUPS_PROCESSED_COLLECTION
+        )
+        collection.insert_many(_reported_cycle_documents(include_back_edge=True))
+
+        response = client.get(_deployment_scope_path("C", "preproduction"))
+
+    assert response.status_code == 200
+    assert response.json()["dependency_graph"] == [
+        {"source_micro_ag_id": "A", "destination_micro_ag_id": "C"},
+        {"source_micro_ag_id": "B", "destination_micro_ag_id": "C"},
+        {"source_micro_ag_id": "C", "destination_micro_ag_id": "D"},
+        {"source_micro_ag_id": "D", "destination_micro_ag_id": "E"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E1"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E2"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E3"},
+        {"source_micro_ag_id": "E1", "destination_micro_ag_id": "C", "is_cyclic": True},
+    ]
+    assert response.json()["deployment_sequence"] == {
+        "bypassed_edges": [{"source_micro_ag_id": "E1", "destination_micro_ag_id": "C"}],
+        "steps": [
+            {"step_index": 1, "micro_ag_ids": ["E1", "E2", "E3"]},
+            {"step_index": 2, "micro_ag_ids": ["E"]},
+            {"step_index": 3, "micro_ag_ids": ["D"]},
+            {"step_index": 4, "micro_ag_ids": ["C"]},
+            {"step_index": 5, "micro_ag_ids": ["A", "B"]},
+        ],
+    }
+
+
+def test_get_deployment_scope_persistence_returns_correct_path_scoped_cycle_response_for_root_d(
+    app_with_mongodb,
+) -> None:
+    app = app_with_mongodb
+
+    with TestClient(app) as client:
+        collection = client.app.state.mongo_db.get_collection(
+            MICRO_AFFINITY_GROUPS_PROCESSED_COLLECTION
+        )
+        collection.insert_many(_reported_cycle_documents(include_back_edge=True))
+
+        response = client.get(_deployment_scope_path("D", "preproduction"))
+
+    assert response.status_code == 200
+    assert response.json()["dependency_graph"] == [
+        {"source_micro_ag_id": "C", "destination_micro_ag_id": "D"},
+        {"source_micro_ag_id": "D", "destination_micro_ag_id": "E"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E1"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E2"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E3"},
+        {"source_micro_ag_id": "E1", "destination_micro_ag_id": "C", "is_cyclic": True},
+    ]
+    assert response.json()["deployment_sequence"] == {
+        "bypassed_edges": [{"source_micro_ag_id": "E1", "destination_micro_ag_id": "C"}],
+        "steps": [
+            {"step_index": 1, "micro_ag_ids": ["E1", "E2", "E3"]},
+            {"step_index": 2, "micro_ag_ids": ["E"]},
+            {"step_index": 3, "micro_ag_ids": ["D"]},
+            {"step_index": 4, "micro_ag_ids": ["C"]},
+        ],
+    }
+
+
+def test_get_deployment_scope_persistence_returns_correct_path_scoped_cycle_response_for_root_e(
+    app_with_mongodb,
+) -> None:
+    app = app_with_mongodb
+
+    with TestClient(app) as client:
+        collection = client.app.state.mongo_db.get_collection(
+            MICRO_AFFINITY_GROUPS_PROCESSED_COLLECTION
+        )
+        collection.insert_many(_reported_cycle_documents(include_back_edge=True))
+
+        response = client.get(_deployment_scope_path("E", "preproduction"))
+
+    assert response.status_code == 200
+    assert response.json()["dependency_graph"] == [
+        {"source_micro_ag_id": "D", "destination_micro_ag_id": "E"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E1"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E2"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E3"},
+        {"source_micro_ag_id": "E1", "destination_micro_ag_id": "C"},
+        {"source_micro_ag_id": "F", "destination_micro_ag_id": "E"},
+        {"source_micro_ag_id": "C", "destination_micro_ag_id": "D", "is_cyclic": True},
+    ]
+    assert response.json()["deployment_sequence"] == {
+        "bypassed_edges": [{"source_micro_ag_id": "C", "destination_micro_ag_id": "D"}],
+        "steps": [
+            {"step_index": 1, "micro_ag_ids": ["C", "E2", "E3"]},
+            {"step_index": 2, "micro_ag_ids": ["E1"]},
+            {"step_index": 3, "micro_ag_ids": ["E"]},
+            {"step_index": 4, "micro_ag_ids": ["D", "F"]},
         ],
     }
