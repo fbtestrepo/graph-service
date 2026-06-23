@@ -263,19 +263,45 @@ def test_use_case_marks_reported_path_scoped_back_edge_and_preserves_root_upstre
         {"source_micro_ag_id": "B", "destination_micro_ag_id": "C"},
         {"source_micro_ag_id": "C", "destination_micro_ag_id": "D"},
         {"source_micro_ag_id": "D", "destination_micro_ag_id": "E"},
-        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E1"},
         {"source_micro_ag_id": "E", "destination_micro_ag_id": "E2"},
         {"source_micro_ag_id": "E", "destination_micro_ag_id": "E3"},
-        {"source_micro_ag_id": "E1", "destination_micro_ag_id": "C", "is_cyclic": True},
+        {"source_micro_ag_id": "E1", "destination_micro_ag_id": "C"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E1", "is_cyclic": True},
     ]
     assert result["deployment_sequence"] == {
-        "bypassed_edges": [{"source_micro_ag_id": "E1", "destination_micro_ag_id": "C"}],
+        "bypassed_edges": [{"source_micro_ag_id": "E", "destination_micro_ag_id": "E1"}],
         "steps": [
-            {"step_index": 1, "micro_ag_ids": ["E1", "E2", "E3"]},
+            {"step_index": 1, "micro_ag_ids": ["E2", "E3"]},
             {"step_index": 2, "micro_ag_ids": ["E"]},
             {"step_index": 3, "micro_ag_ids": ["D"]},
             {"step_index": 4, "micro_ag_ids": ["C"]},
-            {"step_index": 5, "micro_ag_ids": ["A", "B"]},
+            {"step_index": 5, "micro_ag_ids": ["A", "B", "E1"]},
+        ],
+    }
+
+
+def test_use_case_marks_correct_back_edge_for_root_e3() -> None:
+    result = _build_use_case(_reported_cycle_store(include_back_edge=True)).execute(
+        micro_ag_id="E3",
+        environment="preproduction",
+    )
+
+    assert result["graph_has_cycles"] is True
+    assert result["dependency_graph"] == [
+        {"source_micro_ag_id": "C", "destination_micro_ag_id": "D"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E1"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E2"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E3"},
+        {"source_micro_ag_id": "E1", "destination_micro_ag_id": "C"},
+        {"source_micro_ag_id": "D", "destination_micro_ag_id": "E", "is_cyclic": True},
+    ]
+    assert result["deployment_sequence"] == {
+        "bypassed_edges": [{"source_micro_ag_id": "D", "destination_micro_ag_id": "E"}],
+        "steps": [
+            {"step_index": 1, "micro_ag_ids": ["D", "E2", "E3"]},
+            {"step_index": 2, "micro_ag_ids": ["C"]},
+            {"step_index": 3, "micro_ag_ids": ["E1"]},
+            {"step_index": 4, "micro_ag_ids": ["E"]},
         ],
     }
 

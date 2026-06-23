@@ -208,21 +208,45 @@ def test_get_deployment_scope_returns_reported_path_scoped_cycle_response() -> N
             {"source_micro_ag_id": "B", "destination_micro_ag_id": "C"},
             {"source_micro_ag_id": "C", "destination_micro_ag_id": "D"},
             {"source_micro_ag_id": "D", "destination_micro_ag_id": "E"},
-            {"source_micro_ag_id": "E", "destination_micro_ag_id": "E1"},
             {"source_micro_ag_id": "E", "destination_micro_ag_id": "E2"},
             {"source_micro_ag_id": "E", "destination_micro_ag_id": "E3"},
-            {"source_micro_ag_id": "E1", "destination_micro_ag_id": "C", "is_cyclic": True},
+            {"source_micro_ag_id": "E1", "destination_micro_ag_id": "C"},
+            {"source_micro_ag_id": "E", "destination_micro_ag_id": "E1", "is_cyclic": True},
         ],
         "deployment_sequence": {
-            "bypassed_edges": [{"source_micro_ag_id": "E1", "destination_micro_ag_id": "C"}],
+            "bypassed_edges": [{"source_micro_ag_id": "E", "destination_micro_ag_id": "E1"}],
             "steps": [
-                {"step_index": 1, "micro_ag_ids": ["E1", "E2", "E3"]},
+                {"step_index": 1, "micro_ag_ids": ["E2", "E3"]},
                 {"step_index": 2, "micro_ag_ids": ["E"]},
                 {"step_index": 3, "micro_ag_ids": ["D"]},
                 {"step_index": 4, "micro_ag_ids": ["C"]},
-                {"step_index": 5, "micro_ag_ids": ["A", "B"]},
+                {"step_index": 5, "micro_ag_ids": ["A", "B", "E1"]},
             ],
         },
+    }
+
+
+def test_get_deployment_scope_returns_correct_path_scoped_cycle_response_for_root_e3() -> None:
+    with _configured_client(_reported_cycle_store(include_back_edge=True)) as client:
+        response = client.get(_deployment_scope_path("E3", "preproduction"))
+
+    assert response.status_code == 200
+    assert response.json()["dependency_graph"] == [
+        {"source_micro_ag_id": "C", "destination_micro_ag_id": "D"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E1"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E2"},
+        {"source_micro_ag_id": "E", "destination_micro_ag_id": "E3"},
+        {"source_micro_ag_id": "E1", "destination_micro_ag_id": "C"},
+        {"source_micro_ag_id": "D", "destination_micro_ag_id": "E", "is_cyclic": True},
+    ]
+    assert response.json()["deployment_sequence"] == {
+        "bypassed_edges": [{"source_micro_ag_id": "D", "destination_micro_ag_id": "E"}],
+        "steps": [
+            {"step_index": 1, "micro_ag_ids": ["D", "E2", "E3"]},
+            {"step_index": 2, "micro_ag_ids": ["C"]},
+            {"step_index": 3, "micro_ag_ids": ["E1"]},
+            {"step_index": 4, "micro_ag_ids": ["E"]},
+        ],
     }
 
 
