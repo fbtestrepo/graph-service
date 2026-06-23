@@ -67,21 +67,40 @@ class GetMicroAffinityGroupDeploymentScope:
             document_cache=document_cache,
             in_scope_nodes=in_scope_nodes,
         )
-        traversal_roots = sorted(
+        upstream_seed_micro_ag_ids = sorted(
             edge.source_micro_ag_id
             for edge in dependency_edges
             if edge.destination_micro_ag_id == root_document.micro_ag_id
         )
-        if root_document.micro_ag_id not in traversal_roots:
-            traversal_roots.append(root_document.micro_ag_id)
+
+        if upstream_seed_micro_ag_ids:
+            traversal_roots = list(upstream_seed_micro_ag_ids)
+            seed_documents = [
+                document_cache[(micro_ag_id, environment)]
+                for micro_ag_id in upstream_seed_micro_ag_ids
+            ]
+        else:
+            traversal_roots = [root_document.micro_ag_id]
+            seed_documents = [root_document]
+
+        initial_path_micro_ag_ids = [
+            root_document.micro_ag_id,
+            *upstream_seed_micro_ag_ids,
+        ]
+
         dependency_edges |= self._resolve_downstream_edges(
-            root_document=root_document,
+            seed_documents=seed_documents,
             environment=environment,
             document_cache=document_cache,
             in_scope_nodes=in_scope_nodes,
         )
 
-        bypassed_edges = find_path_scoped_cyclic_edges(traversal_roots, dependency_edges)
+        bypassed_edges = find_path_scoped_cyclic_edges(
+            traversal_roots,
+            dependency_edges,
+            root_micro_ag_id=root_document.micro_ag_id,
+            initial_path_micro_ag_ids=initial_path_micro_ag_ids,
+        )
         reduced_edges = remove_bypassed_edges(dependency_edges, bypassed_edges)
         try:
             deployment_steps = build_deployment_steps(in_scope_nodes, reduced_edges)
@@ -173,14 +192,16 @@ class GetMicroAffinityGroupDeploymentScope:
     def _resolve_downstream_edges(
         self,
         *,
-        root_document: _ResolvedProcessedMicroAffinityGroup,
+        seed_documents: list[_ResolvedProcessedMicroAffinityGroup],
         environment: str,
         document_cache: dict[tuple[str, str], _ResolvedProcessedMicroAffinityGroup],
         in_scope_nodes: set[str],
     ) -> set[MicroAffinityGroupEdge]:
         downstream_edges: set[MicroAffinityGroupEdge] = set()
-        downstream_depths: dict[str, int] = {root_document.micro_ag_id: 0}
-        frontier_documents = [root_document]
+        downstream_depths: dict[str, int] = {
+            document.micro_ag_id: 0 for document in seed_documents
+        }
+        frontier_documents = list(seed_documents)
 
         for depth in range(_MAX_DOWNSTREAM_HOPS):
             if not frontier_documents:

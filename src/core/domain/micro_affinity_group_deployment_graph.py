@@ -15,6 +15,9 @@ class MicroAffinityGroupEdge:
 def find_path_scoped_cyclic_edges(
     traversal_roots: list[str],
     edges: set[MicroAffinityGroupEdge],
+    *,
+    root_micro_ag_id: str,
+    initial_path_micro_ag_ids: list[str],
 ) -> list[MicroAffinityGroupEdge]:
     adjacency: dict[str, list[str]] = {}
     edge_lookup = {edge.sort_key(): edge for edge in edges}
@@ -22,29 +25,34 @@ def find_path_scoped_cyclic_edges(
     for edge in sorted(edges, key=lambda edge: edge.sort_key()):
         adjacency.setdefault(edge.source_micro_ag_id, []).append(edge.destination_micro_ag_id)
 
-    visited: set[str] = set()
-    active_path_nodes: set[str] = set()
     cyclic_edges: set[MicroAffinityGroupEdge] = set()
 
-    def _visit(node: str) -> None:
-        visited.add(node)
-        active_path_nodes.add(node)
+    def _visit(node: str, path_stack: list[str]) -> None:
+        path_stack.append(node)
 
         for neighbor in adjacency.get(node, []):
             edge = edge_lookup[(node, neighbor)]
-            if neighbor in active_path_nodes:
-                cyclic_edges.add(edge)
-                continue
-            if neighbor in visited:
-                continue
-            _visit(neighbor)
+            if neighbor in path_stack:
+                # Root is preloaded in the initial traversal path; allow crossing this
+                # boundary once per branch so downstream traversal can continue.
+                if neighbor == root_micro_ag_id and edge.source_micro_ag_id != edge.destination_micro_ag_id:
+                    if path_stack.count(root_micro_ag_id) == 1:
+                        _visit(neighbor, path_stack)
+                    continue
 
-        active_path_nodes.remove(node)
+                if neighbor != root_micro_ag_id or edge.source_micro_ag_id == edge.destination_micro_ag_id:
+                    cyclic_edges.add(edge)
+                continue
 
-    for root_micro_ag_id in traversal_roots:
-        if root_micro_ag_id in visited:
-            continue
-        _visit(root_micro_ag_id)
+            _visit(neighbor, path_stack)
+
+        path_stack.pop()
+
+    base_path = list(dict.fromkeys(initial_path_micro_ag_ids))
+
+    for traversal_root in traversal_roots:
+        path_stack = list(base_path)
+        _visit(traversal_root, path_stack)
 
     return sorted(cyclic_edges, key=lambda edge: edge.sort_key())
 
