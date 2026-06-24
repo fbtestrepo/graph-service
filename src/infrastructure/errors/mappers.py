@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from src.core.exceptions.application_architecture_not_found import ApplicationArchitectureNotFound
+from src.core.exceptions.ambiguous_workload_ownership import AmbiguousWorkloadOwnership
 from src.core.exceptions.authentication_failed import AuthenticationFailed
 from src.core.exceptions.authorization_denied import AuthorizationDenied
 from src.core.exceptions.circular_dependency_detected import CircularDependencyDetected
@@ -31,6 +32,11 @@ class DomainErrorMapping:
 
 
 _MAPPINGS: dict[type[Exception], DomainErrorMapping] = {
+    AmbiguousWorkloadOwnership: DomainErrorMapping(
+        status=422,
+        title="Unprocessable Entity",
+        error_code="ambiguous_workload_ownership",
+    ),
     ComponentNotFound: DomainErrorMapping(status=404, title="Not Found", error_code="component_not_found"),
     DuplicateDependencyEdge: DomainErrorMapping(status=409, title="Conflict", error_code="duplicate_dependency_edge"),
     DuplicateMicroAffinityGroupIdentity: DomainErrorMapping(

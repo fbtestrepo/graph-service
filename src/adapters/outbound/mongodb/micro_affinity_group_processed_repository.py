@@ -109,3 +109,66 @@ class MongoMicroAffinityGroupProcessedRepository(MicroAffinityGroupProcessedRepo
                 session=session,
             )
         )
+
+    def list_relationship_candidates_for_workload_test_scope(
+        self,
+        changed_asset_ids: list[str],
+        environment: str,
+        session: Any | None = None,
+    ) -> list[dict[str, str]]:
+        if not changed_asset_ids:
+            return []
+
+        pipeline = [
+            {"$match": {"environment": environment}},
+            {
+                "$project": {
+                    "micro_ag_id": 1,
+                    "relationships": 1,
+                }
+            },
+            {"$unwind": "$relationships"},
+            {
+                "$project": {
+                    "_id": 0,
+                    "source_workload_asset_id": "$relationships.source_workload.asset_id",
+                    "destination_workload_asset_id": "$relationships.destination_workload.asset_id",
+                    "source_micro_ag_id": "$micro_ag_id",
+                }
+            },
+            {
+                "$match": {
+                    "$or": [
+                        {"source_workload_asset_id": {"$in": changed_asset_ids}},
+                        {"destination_workload_asset_id": {"$in": changed_asset_ids}},
+                    ]
+                }
+            },
+        ]
+
+        return list(self._collection.aggregate(pipeline, session=session))
+
+    def list_workload_ownership_for_asset_ids(
+        self,
+        asset_ids: list[str],
+        environment: str,
+        session: Any | None = None,
+    ) -> list[dict[str, str]]:
+        if not asset_ids:
+            return []
+
+        pipeline = [
+            {"$match": {"environment": environment}},
+            {"$project": {"micro_ag_id": 1, "workloads": 1}},
+            {"$unwind": "$workloads"},
+            {
+                "$project": {
+                    "_id": 0,
+                    "workload_asset_id": "$workloads.asset_id",
+                    "micro_ag_id": "$micro_ag_id",
+                }
+            },
+            {"$match": {"workload_asset_id": {"$in": asset_ids}}},
+        ]
+
+        return list(self._collection.aggregate(pipeline, session=session))

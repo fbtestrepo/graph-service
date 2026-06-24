@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Response, status
+from fastapi import Query
 
 from src.adapters.inbound.api.dependencies.wiring import (
     get_application_architecture_repository,
@@ -16,9 +19,14 @@ from src.adapters.inbound.api.schemas.micro_affinity_group_deployment_scope impo
 from src.adapters.inbound.api.schemas.micro_affinity_group_processed import (
     MicroAffinityGroupProcessed,
 )
+from src.adapters.inbound.api.schemas.workload_test_scope import (
+    WorkloadTestScopeRequest,
+    WorkloadTestScopeResponse,
+)
 from src.core.domain.micro_affinity_group_relationship_mapper import (
     MicroAffinityGroupRelationshipMapper,
 )
+from src.core.use_cases.get_workload_test_scope import GetWorkloadTestScope
 from src.core.ports.application_architecture_repository import ApplicationArchitectureRepository
 from src.core.ports.micro_affinity_group_repository import MicroAffinityGroupRepository
 from src.core.ports.micro_affinity_group_processed_repository import (
@@ -91,3 +99,27 @@ def get_micro_affinity_group_deployment_scope(
     )
     payload = use_case.execute(micro_ag_id=id, environment=environment)
     return MicroAffinityGroupDeploymentScope.model_validate(payload)
+
+
+@router.post(
+    "/workloads/test-scope",
+    response_model=WorkloadTestScopeResponse,
+    response_model_exclude_none=True,
+)
+def get_workload_test_scope(
+    payload: WorkloadTestScopeRequest,
+    environment: Annotated[str, Query(min_length=1, pattern=r".*\S.*")],
+    micro_affinity_group_processed_repository: MicroAffinityGroupProcessedRepository = Depends(
+        get_micro_affinity_group_processed_repository
+    ),
+    now_provider=Depends(get_micro_affinity_group_deployment_scope_clock),
+) -> WorkloadTestScopeResponse:
+    use_case = GetWorkloadTestScope(
+        micro_affinity_group_processed_repository=micro_affinity_group_processed_repository,
+        now_provider=now_provider,
+    )
+    result = use_case.execute(
+        environment=environment,
+        changed_asset_ids=[item.workload_asset_id for item in payload.changed_workloads],
+    )
+    return WorkloadTestScopeResponse.model_validate(result)
