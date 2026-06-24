@@ -1,6 +1,6 @@
 # Dependency Graph Service API Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-06-20
+Auto-generated from all feature plans. Last updated: 2026-06-23
 
 ## Active Technologies
 - Python 3.12 + FastAPI, Pydantic, Motor (MongoDB Atlas), LDAP3 (001-service-skeleton)
@@ -28,6 +28,7 @@ Auto-generated from all feature plans. Last updated: 2026-06-20
 - Python 3.12+ (repo runtime; current workspace venv is Python 3.14.3) + FastAPI, Pydantic v2, pymongo, pytest, FastAPI TestClient/httpx (014-fix-mag-cycle-detection)
 - MongoDB Atlas / `micro_affinity_groups_processed` collection (014-fix-mag-cycle-detection)
 - Python 3.12+ + FastAPI, Pydantic v2, pymongo, pytest, httpx/TestClien (015-fix-deploy-scope-graph)
+- MongoDB Atlas (`micro_affinity_groups_processed` collection) (016-workload-test-scope)
 
 ## Project Structure
 
@@ -46,9 +47,9 @@ tests/
 Python 3.12 (project baseline for scaffolding): Follow standard conventions
 
 ## Recent Changes
+- 016-workload-test-scope: Added Python 3.12+ + FastAPI, Pydantic v2, pymongo, pytest, httpx/TestClien
 - 015-fix-deploy-scope-graph: Added Python 3.12+ + FastAPI, Pydantic v2, pymongo, pytest, httpx/TestClien
 - 014-fix-mag-cycle-detection: Added Python 3.12+ (repo runtime; current workspace venv is Python 3.14.3) + FastAPI, Pydantic v2, pymongo, pytest, FastAPI TestClient/httpx
-- 013-mag-deployment-scope: Added Python 3.12+ (repo runtime), implemented in the existing ASGI service stack + FastAPI, Pydantic v2, pymongo, pytest, FastAPI TestClient/httpx, testcontainers[mongodb], ldap3, datamodel-code-generator
 
 
 <!-- MANUAL ADDITIONS START -->

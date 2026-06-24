@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.core.exceptions.application_architecture_not_found import ApplicationArchitectureNotFound
+from src.core.exceptions.ambiguous_workload_ownership import AmbiguousWorkloadOwnership
 from src.core.exceptions.authentication_failed import AuthenticationFailed
 from src.core.exceptions.authorization_denied import AuthorizationDenied
 from src.core.exceptions.circular_dependency_detected import CircularDependencyDetected
@@ -73,6 +74,7 @@ def unhandled_exception_handler(_request: Request, _exc: Exception) -> JSONRespo
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    app.add_exception_handler(AmbiguousWorkloadOwnership, cast(object, domain_exception_handler))
     app.add_exception_handler(ComponentNotFound, cast(object, domain_exception_handler))
     app.add_exception_handler(DuplicateDependencyEdge, cast(object, domain_exception_handler))
     app.add_exception_handler(DuplicateMicroAffinityGroupIdentity, cast(object, domain_exception_handler))
